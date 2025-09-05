@@ -1,0 +1,524 @@
+/* Width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+    background-clip: padding-box;
+}
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+body {
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+/* DASHBOARD */
+.dashboard-container {
+    display: grid; 
+    grid-template-columns: calc(100% - 375px) 375px;
+    grid-template-rows: 300px 1fr 1fr 1fr 1fr 1fr;
+    height: 95%;
+    overflow-y: hidden;
+}
+
+/* Dashboard Containers */
+.dashboard-summary,
+.dashboard-requests,
+.dashboard-calendar,
+.recent-assessments {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    border-radius: 20px;
+    border: 1px solid #EEEEEE;
+    box-sizing: border-box;
+    margin: 10px;
+    padding: 25px;
+    box-shadow: 4px 4px 4px rgba(150, 150, 150, 0.15);
+}
+.dashboard-requests h1,
+.dashboard-summary h1,
+.recent-assessments h1 {
+    min-height: fit-content;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e1a43;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* DASHBOARD SUMMARY */
+.dashboard-summary {
+    justify-content: flex-start;
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    margin-left: 0; /* */
+}
+.dashboard-summary h2 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #8f8f9d;
+}
+.dashboard-summary .cards {
+    height: fit-content;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+.cards .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    height: fit-content;
+    border-radius: 16px;
+    border: none;
+    padding: 20px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.card .card-data {
+    display: flex;
+    flex-direction: column;
+    gap: -10px;
+    overflow: hidden;
+}
+.cards .icons {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 20px;
+}
+.cards h3 {
+    font-size: 20px;
+    width: 40px;
+    color: #151d48;
+    font-weight: bold;
+}
+.card-data label {
+    color: #415165;
+    font-size: 14px;
+    min-width: 100px;
+    max-height: 24px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Dashboard Requests and Recent Assessments */
+.dashboard-requests,
+.recent-assessments {
+    justify-content: flex-start;
+    align-content: space-between;
+    overflow-y: scroll;
+    grid-column: 1 / 2;
+    grid-row: 2 / 7;
+    margin-left: 0px;
+    overflow: hidden;
+}
+.dashboard-requests::-webkit-scrollbar,
+.recent-scrollable::-webkit-scrollbar,
+.requests::-webkit-scrollbar,
+.todo-list::-webkit-scrollbar {
+    display: none;
+}
+
+/* DASHBOARD REQUESTS */
+.requests {
+    overflow-y: scroll;
+}
+.dashboard-requests .class-header {
+    display: flex;
+    align-items: center;
+    margin: 10px 0px;
+    gap: 10px;
+}
+.class-header span {
+    font-size: 16px;
+    color: #8f8f9d;
+}
+.class-header .line {
+    flex: 1;
+    border-bottom: 1.5px solid #8f8f9d7e;
+}
+/* Student Details */
+.student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: fit-content;
+    width: 100%;
+    min-width: fit-content;
+    border-radius: 10px;
+    border: 1px solid rgb(228, 228, 228);
+    box-sizing: border-box;
+    height: fit-content;
+    padding: 5px 15px;
+}
+.student-item label {
+    margin-bottom: 0px;
+    max-height: 22px;
+    overflow: hidden
+}
+td .btns, 
+.student-item .btns {
+    display: flex;
+    min-width: fit-content;
+    height: fit-content;
+    gap: 10px;
+}
+/* Accept and Reject Button */
+.btns .accept,
+.btns .reject {
+    width: 90px;
+    height: 40px;
+    border-radius: 5px;
+    border: none;
+    background-color: #87ffb0;
+    padding: 5px;
+    height: 30px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    transition: ease-in 200ms;
+    overflow: hidden;
+    cursor: pointer;
+}
+.btns .reject {
+    background-color: #ff8585;
+}
+.accept .label,
+.reject .label{
+    position: relative;
+    top: -3px;
+    color: #2f8113;
+}
+.reject .label {
+    color: #e00f0f;
+}
+.accept .btn-icon,
+.reject .btn-icon {
+    display: none;
+}
+.accpet :hover {
+    background-color: #682892;
+}
+.accept:focus, 
+.reject:focus {
+    outline: none;
+}
+
+/* RECENT ASSESSMENTS */
+.recent-scrollable {
+    overflow-y: scroll;
+}
+/* Recent assessments separator (date and line) */
+.assessment-separator {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    text-align: left;
+    position: relative;
+}
+.date {
+    flex: 0 0 auto;
+    margin-right: 20px;
+    color: #CDCDCD;
+}
+.separator-line {
+    flex: 1;
+    border: none;
+    border-top: 1px solid #CDCDCD;;
+    margin: 0;
+}
+/* Recent Card */
+#recents {
+    margin-bottom: 15px;
+    border-radius: 16px;
+}
+#recent-card {
+    padding: 10px;
+}
+/* Recent Data */
+#recent-data {
+    display:flex;
+    align-items: center;
+    width: 100%;
+    flex-direction: row;
+}
+.recent-icon .icons{
+    justify-content: center;
+    margin: 0 20px;
+    flex-shrink: 0;
+}
+.recent-details {
+    margin: 10px 0 0 10px;
+}
+
+/* DASHBOARD CALENDAR */
+.dashboard-calendar {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    padding: 5px 25px;
+}
+
+/* Dashboard To-Do List */
+.dashboard-todo {
+    grid-column: 2 / 3;
+    grid-row: 3 / 7;
+    border-radius: 20px;
+    border: 1px solid #EEEEEE;
+    box-sizing: border-box;
+    margin: 10px;
+    padding: 20px;
+    box-shadow: 4px 4px 4px rgba(150, 150, 150, 0.15);
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+.todo-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e1a43;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.todo-input-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.todo-input-container input {
+    width: 200px;
+    height: 40px;
+    border: 1px solid #e9b422;
+    border-radius: 10px;
+    padding: 0 10px;
+    font-size: 16px;
+}
+
+.todo-input-container input:hover {
+    border: 2px solid #e9b422;
+}
+
+.todo-input-container input:focus {
+    border-color: #e9b422;
+    box-shadow: 0 0 8px rgba(235, 221, 103, 0.75);
+    outline: none;
+}
+
+.todo-input-container button {
+    width: 90px;
+    height: 40px;
+    border-radius: 10px;
+    outline: none;
+    border: none !important;
+    background-image: linear-gradient(to right, #e9cb60, #e6be2f);
+    background-color: #dbad07;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.todo-input-container button:hover {
+    background-color: #dbad07;
+}
+
+.todo-input-container:focus,
+.todo-input-container:active {
+    border: none !important;
+    outline: none !important;
+}
+
+.todo-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+    overflow-y: auto;
+    height: 100%; 
+}
+
+.schedule-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: fit-content;
+    width: 100%;
+    min-width: fit-content;
+    border-radius: 10px;
+    border: 1px solid rgb(228, 228, 228);
+    box-sizing: border-box;
+    padding: 10px 15px;
+    margin-top: 15px;
+}
+
+.schedule-item h3 {
+    margin-bottom: 0px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    margin: 0;
+    font-weight: 500;
+    font-size: 18px;
+    color: #1e1a43;
+}
+
+.schedule-item .btns {
+    display: flex;
+    min-width: fit-content;
+    height: fit-content;
+    gap: 10px;
+}
+
+.schedule-item .btns .delete {
+    width: 35px; 
+    height: 35px;
+    border-radius: 50%; 
+    border: none;
+    background-color: #ff8585;
+    color: #e00f0f;
+    font-size: 16px; 
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.schedule-item .btns .delete:hover {
+    background-color: #e26565;
+}
+
+@media screen and (max-width: 850px) {
+    .dashboard-container {
+        display: flex;
+        justify-content: flex-start;
+        flex-direction: column;
+        height: 100%;
+        overflow: scroll;
+        overflow-y: scroll;
+    }
+    .dashboard-summary,
+    .dashboard-requests,
+    .recent-assessments,
+    .dashboard-calendar,
+    .dashboard-todo {
+        margin: 10px 0;
+    }
+    .dashboard-requests,
+    .recent-assessments,
+    .dashboard-todo {
+        min-height: 300px;
+    }
+    .dashboard-calendar {
+        min-height: 300px;
+        min-width: 300px;
+    }
+    .dashboard-container::-webkit-scrollbar {
+        display: none;
+    }
+    .cards {
+        height: fit-content;
+    }
+    .card-data label {
+        max-height: none;
+    }
+}
+@media screen and (max-width: 550px) {
+    .dashboard-summary .cards {
+        flex-direction: column;
+    }
+    .cards .card {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 20px;
+        align-items: center;
+    }
+    .cards .icons {
+        margin-bottom: 0;
+    }
+    .cards .card-data {
+        padding: 3px 0 0 0;
+    }
+    .cards label,
+    .cards h3 {
+        margin-bottom: 0;
+    }
+    .btns .accept,
+    .btns .reject {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+    }
+    .accept .label,
+    .reject .label {
+        display: none;
+    }
+    .accept .btn-icon,
+    .reject .btn-icon {
+        display: block;
+        color: #2f8113;
+    }
+    .reject span {
+        color: #e00f0f;
+    }
+
+    /* Responsive Adjustments */
+    @media screen and (min-width: 768px) {
+        .dashboard-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dashboard-calendar {
+            grid-column: 1 / 2;
+        }
+        
+        .dashboard-todo {
+            grid-column: 2 / 3;
+        }
+    }
+
+    .dashboard-todo {
+        min-height: 300px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .todo-input-container input {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .todo-list {
+        width: 100%;
+    }
+
+    .todo-list li {
+        min-width: 200px;
+        max-width: 100%;
+    }
+
+    .todo-list li label {
+        flex: 1;
+        min-width: 0;
+        padding-right: 10px;
+    }
+}
