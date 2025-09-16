@@ -34,21 +34,21 @@
         <div id="courses-tab" class="tab-content scrollable-content active">
             <div class="course-container">
                 <?php
-                $qry = $conn->query("SELECT * FROM course WHERE faculty_id = '".$_SESSION['login_id']."' ORDER BY course_name ASC");
+                $qry = $conn->query("SELECT * FROM program WHERE faculty_id = '".$_SESSION['login_id']."' ORDER BY program_name ASC");
                 if ($qry->num_rows > 0) {
                     while ($row = $qry->fetch_assoc()) {
-                        $course_id =  $row['course_id'];
-                        $result = $conn->query("SELECT COUNT(*) as classCount FROM class WHERE course_id = '$course_id'");
+                        $program_id =  $row['program_id'];
+                        $result = $conn->query("SELECT COUNT(*) as classCount FROM class WHERE program_id = '$program_id'");
                         $classCountRow = $result->fetch_assoc();
                         $classCount = $classCountRow['classCount'];
                 ?>
                 <div class="course-card">
                     <div class="course-card-body">
-                        <div class="course-card-title"><?php echo $row['course_name'] ?></div>
+                        <div class="course-card-title"><?php echo $row['program_name'] ?></div>
                         <div class="course-card-text"><?php echo $classCount ?> Class(es)</div>
                         <div class="course-actions">
-                            <button id="viewClasses" class="tertiary-button viewClasses" data-id="<?php echo $row['course_id'] ?>" data-name="<?php echo $row['course_name'] ?>" type="button">Classes</button>
-                            <button id="viewCourseDetails" class="main-button" data-id="<?php echo $row['course_id'] ?>" type="button">View Details</button>
+                            <button id="viewClasses" class="tertiary-button viewClasses" data-id="<?php echo $row['program_id'] ?>" data-name="<?php echo $row['program_name'] ?>" type="button">Classes</button>
+                            <button id="viewCourseDetails" class="main-button" data-id="<?php echo $row['program_id'] ?>" type="button">View Details</button>
                         </div>
                     </div>
                 </div>
@@ -126,11 +126,11 @@
                 $('#' + popupId).css('display', 'none');
             }
 
-            function getClasses(course_id) {
+            function getClasses(program_id) {
                 $.ajax({
                     url: 'get_classes.php',
                     method: 'POST',
-                    data: { course_id: course_id },
+                    data: { program_id: program_id },
                     success: function(response) {
                         $('#class-container').html(response);
                         updateMeatballMenu();
@@ -239,11 +239,11 @@
 
             // View course details button
             $(document).on('click', '#viewCourseDetails', function() {
-                var course_id = $(this).attr('data-id');
+                var program_id = $(this).attr('data-id');
                 $.ajax({
                     url: 'get_course_details.php',
                     method: 'GET',
-                    data: { course_id: course_id },
+                    data: { program_id: program_id },
                     success: function(response) {
                         $('#program-details-popup #courseDetailsBody').html(response);
                         // $('#course_details').modal('show');
@@ -251,7 +251,7 @@
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.log("Request failed: " + textStatus + ", " + errorThrown);
-                        alert('An error occurred while fetching course details.');
+                        alert('An error occurred while fetching program details.');
                     }
                 });
             });
@@ -315,18 +315,18 @@
 
             // Handle Classes button click
             $('.viewClasses').click(function() {
-                var course_id = $(this).attr('data-id');
-                var course_name = $(this).attr('data-name');
+                var program_id = $(this).attr('data-id');
+                var program_name = $(this).attr('data-name');
 
                 // Show the Classes tab and set the course name
                 $('#classes-tab-link').show().click();
-                $('#classes-tab-link').text(course_name);
+                $('#classes-tab-link').text(program_name);
 
                 // Fetch and display classes associated with the course
-                getClasses(course_id);
+                getClasses(program_id);
 
                 // Set the hidden course_id field in the add class form
-                $('#add-class-popup input[name="course_id"]').val(course_id);
+                $('#add-class-popup input[name="program_id"]').val(program_id);
             });
 
             function initializeMeatballMenu() {
