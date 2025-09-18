@@ -31,9 +31,15 @@
             <a href="faculty_dashboard.php" class="sidebar-item">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard
             </a>
+            
             <a href="classes.php" class="sidebar-item">
                 <i class="fa fa-list-alt sidebar-icon"></i> Classes
             </a>
+            
+            <a href="databank.php" class="sidebar-item">
+                <i class="fa fa-database sidebar-icon"></i> Data Bank
+            </a>
+
         <?php else: ?>
             <a href="student_dashboard.php" class="sidebar-item">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard

@@ -1089,3 +1089,189 @@ thead th {
 ::-webkit-scrollbar-thumb:hover {
     background: #aaa;
 }
+
+/* Search bar & button container margin */
+.databank-controls {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;  
+    margin-bottom: 20px;
+}
+
+/* Search bar */
+.databank-search {
+    width: 1120px;          
+    height: 40px;          
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    padding: 0 20px;
+    font-size: 16px;
+    margin-right: 20px;
+    margin-left: 30px;
+}
+
+/* Add Program button */
+.add-program-btn {
+    background: linear-gradient(90deg, #333274 0%, #413E81 100%);
+    color: #fff;
+    border: none;
+    border-radius: 15px;
+    padding: 6px 18px;    
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Programs header(text) */
+.programs-header {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1E1A43;
+    margin: 30px 35px 20px;
+}
+
+/* Program cards */
+.program-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 29px;
+    margin: 30px 35px 20px;
+}
+
+.program-card {
+    background: #FFFFFF;
+    border: 1px solid #F0EFEF;
+    border-radius: 20px;
+    width: 341px;
+    height: 162px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    position: relative;
+}
+
+.program-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1E1A43;
+    margin: 0;
+}
+
+/* View details button */
+.view-details-btn {
+    background: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 113px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+/* Meatball menu */
+.meatball-menu-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.meatball-menu-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1E1A43;
+    font-size: 20px; 
+}
+
+/* The dropdown itself */
+.meatball-menu {
+    display: none;
+    position: absolute;
+    top: 30px;
+    right: 0;
+    background: #6E72C1;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 10;
+    min-width: 160px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25); 
+}
+
+/* Links inside the dropdown */
+.meatball-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+/* Icons inside the links */
+.meatball-menu a i {
+    font-size: 14px;
+    color: #fff !important;
+}
+
+/* Delete link special color (optional) */
+.meatball-menu a.delete,
+.meatball-menu a.delete i {
+    color: #ffffff !important;
+}
+
+/* Hover effect */
+.meatball-menu a:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff !important;
+}
+
+/* Show dropdown when container has .show */
+.meatball-menu-container.show .meatball-menu {
+    display: block;
+}
+
+.swal2-popup {
+    width: 400px !important; 
+    max-width: 90% !important;  
+    border-radius: 20px !important;  
+    padding: 30px 20px !important; 
+    box-sizing: border-box;
+}
+
+/* Make SweetAlert actions container full width */
+.swal2-actions {
+    width: 100% !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 45px 20px !important; 
+    box-sizing: border-box;
+}
+
+.swal-btn {
+    background-image: linear-gradient(to right, #8794F2, #6E72C1);
+    color: white;
+    border: none;
+    border-radius: 10px; 
+    font-weight: bold;
+
+    width: 100% !important;
+    max-width: 90% !important;
+    margin: 0 auto !important; 
+
+    padding: 14px 0 !important;
+    font-size: 16px !important;
+    text-align: center;
+    line-height: normal !important;
+    box-sizing: border-box;
+}
+.swal-btn:hover {
+    background-color: #4A4CA6 !important;
+    background-image: none !important;
+    cursor: pointer;
+    box-shadow: 4px 4px 15px rgba(0,0,0,0.25);
+}

@@ -16,7 +16,7 @@ if (isset($_POST['class_id'])) {
     }
 
     // Check if the class already has a code
-    $check_sql = "SELECT class_name, subject, code FROM class WHERE class_id = '$class_id'";
+    $check_sql = "SELECT class_name, course_name, code FROM class WHERE class_id = '$class_id'";
     $check_result = $conn->query($check_sql);
 
     if ($check_result->num_rows > 0) {
@@ -27,7 +27,7 @@ if (isset($_POST['class_id'])) {
             echo json_encode([
                 'success' => true,
                 'class_name' => $row['class_name'],
-                'subject' => $row['subject'],
+                'course_name' => $row['course_name'],
                 'code' => $row['code']
             ]);
         } else {
@@ -45,7 +45,7 @@ if (isset($_POST['class_id'])) {
                 echo json_encode([
                     'success' => true,
                     'class_name' => $row['class_name'],
-                    'subject' => $row['subject'],
+                    'course_name' => $row['course_name'],
                     'code' => $new_code
                 ]);
             } else {
