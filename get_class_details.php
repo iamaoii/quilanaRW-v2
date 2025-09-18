@@ -5,10 +5,10 @@ if (isset($_GET['class_id'])) {
     $class_id = $conn->real_escape_string($_GET['class_id']);
 
     // Fetch the class details
-    $qry_class = $conn->query("SELECT class_name, subject FROM class WHERE class_id = '$class_id'");
+    $qry_class = $conn->query("SELECT class_name, course_name FROM class WHERE class_id = '$class_id'");
     if ($qry_class->num_rows > 0) {
         $class = $qry_class->fetch_assoc();
-        echo "<h4><strong>{$class['class_name']} ({$class['subject']})</strong></h4>";
+        echo "<h4><strong>{$class['class_name']} ({$class['course_name']})</strong></h4>";
     } else {
         echo "<p><strong>Class not found.</strong></p>";
     }
@@ -255,7 +255,7 @@ function toggleUpload(assessmentId, classId, isUploaded) {
             body: `assessment_id=${assessmentId}&class_id=${classId}&action=${action}`
         })
         .then(response => response.json())
-        .then(data => {
+        .then data => {
             if (data.success) {
                 alert(data.message);
                 location.reload(); // Reload the page to reflect the changes

@@ -3,11 +3,11 @@
 include('db_connect.php');
 
 // Check if the required fields are set
-if (isset($_POST['class_name']) && isset($_POST['subject']) && isset($_POST['course_id'])) {
+if (isset($_POST['class_name']) && isset($_POST['course_name']) && isset($_POST['program_id'])) {
     // Sanitize input data
     $class_name = $conn->real_escape_string($_POST['class_name']);
-    $subject = $conn->real_escape_string($_POST['subject']);
-    $course_id = $conn->real_escape_string($_POST['course_id']);
+    $course_name = $conn->real_escape_string($_POST['course_name']);
+    $program_id = $conn->real_escape_string($_POST['program_id']);
     $faculty_id = $conn->real_escape_string($_POST['faculty_id']);
 
     // Initialize variables for unique code generation
@@ -31,7 +31,7 @@ if (isset($_POST['class_name']) && isset($_POST['subject']) && isset($_POST['cou
     }
 
     // Insert new class into the database
-    $sql = "INSERT INTO class (course_id, code, class_name, subject, faculty_id) VALUES ('$course_id', '$unique_code', '$class_name', '$subject', '$faculty_id')";
+    $sql = "INSERT INTO class (program_id, code, class_name, course_name, faculty_id) VALUES ('$program_id', '$unique_code', '$class_name', '$course_name', '$faculty_id')";
     if ($conn->query($sql) === TRUE) {
         echo json_encode(['status' => 1, 'msg' => 'Class added successfully.']);
     } else {
