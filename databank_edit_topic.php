@@ -184,7 +184,7 @@ document.getElementById('edit-topic-form').addEventListener('submit', function(e
                 showConfirmButton: true,
                 confirmButtonText: "OK",
                 customClass: {
-                    confirmButton: 'swal-confirm-btn'
+                    confirmButton: 'swal-btn'
                 }
             }).then((result) => {
                 if (result.isConfirmed || result.isDismissed) {
@@ -199,7 +199,7 @@ document.getElementById('edit-topic-form').addEventListener('submit', function(e
                 text: "Topic already exists.",
                 confirmButtonText: "OK",
                 customClass: {
-                    confirmButton: 'swal-confirm-btn'
+                    confirmButton: 'swal-btn'
                 }
             });
 

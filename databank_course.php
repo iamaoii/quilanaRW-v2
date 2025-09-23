@@ -364,8 +364,8 @@ if (!$program) {
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="long-search-bar">
-            <input type="text" placeholder="Search courses..." class="course-search">
-            <button><i class="fas fa-search"></i></button>
+            <input type="text" placeholder="Search courses..." id="course-search-input">
+            <button id="course-search-btn"><i class="fas fa-search"></i></button>
         </div>
     </div>
         <div class="button-group">
@@ -379,7 +379,7 @@ if (!$program) {
     </div>
 
     <!-- Course List -->
-    <div class="course-list">
+    <div class="course-list" id="course-list">
         <?php
         $course_query = $conn->prepare("
             SELECT c.* 
@@ -404,55 +404,57 @@ if (!$program) {
                 </button>
             </div>
             <div class="course-content">
-                <div class="topics-section">
-                    <h4>Topics</h4>
-                    <div class="topic-container">
-                        <?php
-                        // Fetch topics for this course
-                        $topics_query = $conn->prepare("
-                            SELECT t.*, pc.program_course_id 
-                            FROM rw_bank_topic t 
-                            INNER JOIN rw_bank_program_course pc 
-                            ON t.program_course_id = pc.program_course_id 
-                            WHERE pc.course_id = ? 
-                            ORDER BY t.topic_name ASC
-                        ");
-                        $topics_query->bind_param("i", $course['course_id']);
-                        $topics_query->execute();
-                        $topics_result = $topics_query->get_result();
+                <div class="course-details">
+                    <div class="topics-section">
+                        <h4>Topics</h4>
+                        <div class="topic-container">
+                            <?php
+                            // Fetch topics for this course
+                            $topics_query = $conn->prepare("
+                                SELECT t.*, pc.program_course_id 
+                                FROM rw_bank_topic t 
+                                INNER JOIN rw_bank_program_course pc 
+                                ON t.program_course_id = pc.program_course_id 
+                                WHERE pc.course_id = ? 
+                                ORDER BY t.topic_name ASC
+                            ");
+                            $topics_query->bind_param("i", $course['course_id']);
+                            $topics_query->execute();
+                            $topics_result = $topics_query->get_result();
 
-                        if ($topics_result->num_rows > 0) {
-                            while ($topic = $topics_result->fetch_assoc()) {
-                        ?>
-                        <div class="topic-card">
-                            <p class="topic-name"><?php echo htmlspecialchars($topic['topic_name']); ?></p>
-                            <!-- Actions -->
-                            <div class="meatball-menu-container">
-                                <button class="meatball-menu-btn">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="meatball-menu">
-                                    <a href="#" class="view" data-topic-id="<?php echo $topic['topic_id']; ?>">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    <a href="#" class="edit-topic-btn" data-topic-id="<?php echo $topic['topic_id']; ?>" 
-                                       data-topic-name="<?php echo htmlspecialchars($topic['topic_name']); ?>">
-                                        <i class="fas fa-pen"></i> Edit
-                                    </a>
-                                    <a href="#" class="delete" data-topic-id="<?php echo $topic['topic_id']; ?>">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </a>
+                            if ($topics_result->num_rows > 0) {
+                                while ($topic = $topics_result->fetch_assoc()) {
+                            ?>
+                            <div class="topic-card">
+                                <p class="topic-name"><?php echo htmlspecialchars($topic['topic_name']); ?></p>
+                                <!-- Actions -->
+                                <div class="meatball-menu-container">
+                                    <button class="meatball-menu-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="meatball-menu">
+                                        <a href="#" class="view" data-topic-id="<?php echo $topic['topic_id']; ?>">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="#" class="edit-topic-btn" data-topic-id="<?php echo $topic['topic_id']; ?>" 
+                                           data-topic-name="<?php echo htmlspecialchars($topic['topic_name']); ?>">
+                                            <i class="fas fa-pen"></i> Edit
+                                        </a>
+                                        <a href="#" class="delete" data-topic-id="<?php echo $topic['topic_id']; ?>">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </div>
                                 </div>
+                                <a href="#" class="view-details-btn" data-topic-id="<?php echo $topic['topic_id']; ?>">View Details</a>
                             </div>
-                            <a href="#" class="view-details-btn" data-topic-id="<?php echo $topic['topic_id']; ?>">View Details</a>
-                        </div>
-                        <?php
+                            <?php
+                                }
+                            } else {
+                                echo '<p class="no-topics">No topics added yet</p>';
                             }
-                        } else {
-                            echo '<p class="no-topics">No topics added yet</p>';
-                        }
-                        $topics_query->close();
-                        ?>
+                            $topics_query->close();
+                            ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -475,172 +477,287 @@ include('databank_edit_topic.php');
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-    // ======== POPUPS (Add Course) ========
-    const coursePopup = document.getElementById('course-popup-overlay');
-    const courseForm = document.getElementById('course-form');
-    const courseCloseBtn = coursePopup?.querySelector('.course-popup-close');
-
-    // ======== ADD COURSE ========
-    document.querySelector('.add-course-btn')?.addEventListener('click', () => {
-        coursePopup.style.display = 'flex';
-        document.getElementById('course_name')?.focus();
-    });
-
-    courseCloseBtn?.addEventListener('click', () => coursePopup.style.display = 'none');
-    coursePopup?.addEventListener('click', (e) => {
-        if (e.target === coursePopup) coursePopup.style.display = 'none';
-    });
-
-    courseForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const courseName = courseForm.querySelector('[name="course_name"]').value.trim();
-        if (!courseName) {
-            Swal.fire({ icon: 'error', title: 'Oops...', text: 'Please enter a course name', confirmButtonText: 'OK' });
-            return;
-        }
-        fetch('databank_add_course.php', { method: 'POST', body: new FormData(courseForm) })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    coursePopup.style.display = 'none';
-                    courseForm.reset();
-                    Swal.fire({ icon: 'success', title: 'Success!', text: 'Course added', confirmButtonText: 'OK' })
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to add course', confirmButtonText: 'OK' });
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'Unexpected error occurred', 'error');
-            });
-    });
-
-    // ======== EDIT TOPIC ========
-    const topicEditOverlay = document.getElementById("topic-edit-overlay");
-    const topicEditForm    = document.getElementById("edit-topic-form");
-
-    // ======== OPEN OVERLAY ========
-    document.addEventListener("click", (e) => {
-        const editBtn = e.target.closest(".edit-topic-btn");
-        if (editBtn) {
-            e.preventDefault();
-            const topicId   = editBtn.getAttribute("data-topic-id");
-            const topicName = editBtn.getAttribute("data-topic-name");
-
-            document.getElementById("edit_topic_id").value = topicId;
-            document.getElementById("edit_topic_name").value = topicName;
-
-            topicEditOverlay.style.display = "flex";
-        }
-    });
+    const programId = <?php echo json_encode($program_id); ?>;
 
     // ======== SEARCH COURSES ========
-    const searchInput = document.querySelector('.course-search');
-    searchInput?.addEventListener('input', function () {
-        const searchTerm = this.value.toLowerCase();
-        document.querySelectorAll('.course-item').forEach(item => {
-            const courseName = item.querySelector('.course-name').textContent.toLowerCase();
-            item.style.display = courseName.includes(searchTerm) ? 'block' : 'none';
+    const searchInput = document.getElementById('course-search-input');
+    const searchBtn = document.getElementById('course-search-btn');
+    const courseList = document.getElementById('course-list');
+
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+
+        const formData = new FormData();
+        formData.append('search', searchTerm);
+        formData.append('program_id', programId);
+
+        fetch('databank_course_search.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                courseList.innerHTML = data.html;
+                attachCourseToggleListeners();
+                attachMeatballMenuListeners();
+                attachTopicActionListeners();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to perform search',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Search error:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An unexpected error occurred during search',
+                confirmButtonText: 'OK',
+                customClass: { confirmButton: 'swal-btn' }
+            });
         });
+    }
+
+    // Debounced search on input
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300); // 300ms debounce
     });
+
+    // Search on button click
+    searchBtn.addEventListener('click', performSearch);
 
     // ======== TOGGLE COURSE CONTENT ========
-    document.querySelectorAll('.course-header').forEach(header => {
-        header.addEventListener('click', function () {
-            const content = this.nextElementSibling;
-            const toggleIcon = this.querySelector('.course-toggle i');
+    function attachCourseToggleListeners() {
+        document.querySelectorAll('.course-header').forEach(header => {
+            header.addEventListener('click', function () {
+                const content = this.nextElementSibling;
+                const toggleIcon = this.querySelector('.course-toggle i');
 
-            // Close others
-            document.querySelectorAll('.course-content.active').forEach(c => {
-                if (c !== content) {
-                    c.classList.remove('active');
-                    c.previousElementSibling.querySelector('.course-toggle i')
-                        .classList.replace('fa-chevron-up', 'fa-chevron-down');
-                }
+                // Close others
+                document.querySelectorAll('.course-content.active').forEach(c => {
+                    if (c !== content) {
+                        c.classList.remove('active');
+                        c.previousElementSibling.querySelector('.course-toggle i')
+                            .classList.replace('fa-chevron-up', 'fa-chevron-down');
+                    }
+                });
+
+                // Toggle current
+                content.classList.toggle('active');
+                toggleIcon.classList.toggle('fa-chevron-down');
+                toggleIcon.classList.toggle('fa-chevron-up');
             });
-
-            // Toggle current
-            content.classList.toggle('active');
-            toggleIcon.classList.toggle('fa-chevron-down');
-            toggleIcon.classList.toggle('fa-chevron-up');
         });
-    });
+    }
 
     // ======== TOPIC MEATBALL MENU ========
-    document.querySelectorAll('.topic-card .meatball-menu-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => {
-                if (c !== btn.parentElement) c.classList.remove('show');
+    function attachMeatballMenuListeners() {
+        document.querySelectorAll('.topic-card .meatball-menu-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => {
+                    if (c !== btn.parentElement) c.classList.remove('show');
+                });
+                btn.parentElement.classList.toggle('show');
             });
-            btn.parentElement.classList.toggle('show');
+        });
+
+        // Close meatball menu when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => c.classList.remove('show'));
+        });
+    }
+
+    // ======== TOPIC ACTIONS ========
+    function attachTopicActionListeners() {
+        document.querySelectorAll('.topic-card').forEach(topicCard => {
+            // View topic
+            topicCard.querySelector('.view')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const topicName = topicCard.querySelector('.topic-name').textContent;
+                Swal.fire({
+                    title: 'View Topic',
+                    text: `Viewing topic: ${topicName}`,
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            });
+
+            // Delete topic
+            topicCard.querySelector('.delete')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const topicId = e.target.closest('.delete').getAttribute('data-topic-id');
+                const topicName = topicCard.querySelector('.topic-name').textContent;
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to delete "${topicName}". This action cannot be undone!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'rgba(255, 108, 108, 1)',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    customClass: { confirmButton: 'swal-btn' }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch('databank_delete_topic.php', {
+                            method: 'POST',
+                            body: new URLSearchParams({ topic_id: topicId })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Topic has been deleted.',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    performSearch(); // Refresh the list
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'Failed to delete topic.',
+                                    confirmButtonText: 'OK',
+                                    customClass: { confirmButton: 'swal-btn' }
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Unexpected error occurred.',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'swal-btn' }
+                            });
+                        });
+                    }
+                });
+            });
+
+            // View details
+            topicCard.querySelector('.view-details-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const topicName = topicCard.querySelector('.topic-name').textContent;
+                Swal.fire({
+                    title: 'Topic Details',
+                    text: `Viewing details for: ${topicName}`,
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            });
+
+            // Edit topic
+            topicCard.querySelector('.edit-topic-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const topicId = e.target.closest('.edit-topic-btn').getAttribute('data-topic-id');
+                const topicName = e.target.closest('.edit-topic-btn').getAttribute('data-topic-name');
+
+                const topicEditOverlay = document.getElementById('topic-edit-overlay');
+                const topicEditForm = document.getElementById('edit-topic-form');
+
+                if (topicEditForm) {
+                    topicEditForm.querySelector('#edit_topic_id').value = topicId;
+                    topicEditForm.querySelector('#edit_topic_name').value = topicName;
+                    topicEditOverlay.style.display = 'flex';
+                }
+            });
+        });
+    }
+
+    // ======== EDIT TOPIC ========
+    const topicEditOverlay = document.getElementById('topic-edit-overlay');
+    const topicEditForm = document.getElementById('edit-topic-form');
+    const topicEditCloseBtn = topicEditOverlay?.querySelector('.topic-popup-close');
+
+    topicEditCloseBtn?.addEventListener('click', () => {
+        topicEditOverlay.style.display = 'none';
+    });
+
+    topicEditOverlay?.addEventListener('click', (e) => {
+        if (e.target === topicEditOverlay) {
+            topicEditOverlay.style.display = 'none';
+        }
+    });
+
+    topicEditForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const topicName = topicEditForm.querySelector('#edit_topic_name').value.trim();
+        const topicId = topicEditForm.querySelector('#edit_topic_id').value;
+
+        if (!topicName) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please enter a topic name',
+                confirmButtonText: 'OK',
+                customClass: { confirmButton: 'swal-btn' }
+            });
+            return;
+        }
+
+        fetch('databank_edit_topic.php', {
+            method: 'POST',
+            body: new URLSearchParams({
+                topic_id: topicId,
+                topic_name: topicName
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                topicEditOverlay.style.display = 'none';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Topic updated successfully',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    performSearch(); // Refresh the list
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update topic',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unexpected error occurred',
+                confirmButtonText: 'OK',
+                customClass: { confirmButton: 'swal-btn' }
+            });
         });
     });
 
-    // Close meatball menu when clicking outside
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => c.classList.remove('show'));
-    });
-
-    // ======== TOPIC ACTIONS ========
-    document.addEventListener('click', (e) => {
-        const topicCard = e.target.closest('.topic-card');
-
-        // View topic
-        if (e.target.closest('.topic-card .view')) {
-            e.preventDefault();
-            const topicName = topicCard.querySelector('.topic-name').textContent;
-            Swal.fire({ title: 'View Topic', text: `Viewing topic: ${topicName}`, icon: 'info', confirmButtonText: 'OK' });
-        }
-
-        // Delete topic
-        if (e.target.closest('.topic-card .delete')) {
-            e.preventDefault();
-            const topicId = e.target.closest('.delete').getAttribute('data-topic-id');
-            const topicName = topicCard.querySelector('.topic-name').textContent;
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: `You are about to delete "${topicName}". This action cannot be undone!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: 'rgba(255, 108, 108, 1)',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    fetch('databank_delete_topic.php', {
-                        method: 'POST',
-                        body: new URLSearchParams({ topic_id: topicId })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Deleted!', 'Topic has been deleted.', 'success')
-                                .then(() => location.reload());
-                        } else {
-                            Swal.fire('Error!', data.message || 'Failed to delete topic.', 'error');
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        Swal.fire('Error!', 'Unexpected error occurred.', 'error');
-                    });
-                }
-            });
-        }
-
-
-        // ======== VIEW DETAILS ========
-        if (e.target.closest('.topic-card .view-details-btn')) {
-            e.preventDefault();
-            const topicName = topicCard.querySelector('.topic-name').textContent;
-            Swal.fire({ title: 'Topic Details', text: `Viewing details for: ${topicName}`, icon: 'info', confirmButtonText: 'OK' });
-        }
-    });
-
+    // Initial attachment of listeners
+    attachCourseToggleListeners();
+    attachMeatballMenuListeners();
+    attachTopicActionListeners();
 });
 </script>
 
