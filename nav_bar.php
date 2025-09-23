@@ -36,7 +36,12 @@
                 <i class="fa fa-list-alt sidebar-icon"></i> Classes
             </a>
             
-            <a href="databank.php" class="sidebar-item">
+                <?php
+            $current_page = basename($_SERVER['PHP_SELF']);
+            $is_databank = ($current_page == 'databank.php' || strpos($current_page, 'databank_') === 0);
+            ?>
+
+            <a href="databank.php" class="sidebar-item <?php echo $is_databank ? 'active' : ''; ?>">
                 <i class="fa fa-database sidebar-icon"></i> Data Bank
             </a>
 

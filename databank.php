@@ -23,6 +23,14 @@ if (session_status() === PHP_SESSION_NONE) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
+        /* Remove black lines for pre-selected items */
+        button:focus,
+        input:focus,
+        a:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
         /* BODY */
         body {
             overflow: hidden;
@@ -499,8 +507,8 @@ if (session_status() === PHP_SESSION_NONE) {
                     text: `You are about to delete "${programName}". This action cannot be undone!`,
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
+                    confirmButtonColor: 'rgba(206, 98, 98, 1)',
                     confirmButtonText: 'Yes, delete it!'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -680,7 +688,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Invalid response from server: ' + text,
+                        text: 'Invalid response f                                                                                               rom server: ' + text,
                         confirmButtonText: 'OK',
                         customClass: { confirmButton: 'swal-btn' }
                     });

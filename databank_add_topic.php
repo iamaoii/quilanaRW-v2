@@ -25,10 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['success'] = false;
             $response['message'] = 'Topic name is required';
         } else {
-            // Start transaction
             $conn->begin_transaction();
             try {
-                // First, get the program_course_id for this course
                 $program_course_query = $conn->prepare("SELECT program_course_id FROM rw_bank_program_course WHERE course_id = ?");
                 $program_course_query->bind_param("i", $course_id);
                 $program_course_query->execute();
@@ -41,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $program_course_row = $program_course_result->fetch_assoc();
                 $program_course_id = $program_course_row['program_course_id'];
                 
-                // Check if topic already exists for this program-course
                 $check_query = $conn->prepare("SELECT topic_id FROM rw_bank_topic WHERE topic_name = ? AND program_course_id = ?");
                 $check_query->bind_param("si", $topic_name, $program_course_id);
                 $check_query->execute();
@@ -50,12 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('This topic already exists in this course');
                 }
                 
-                // Insert new topic
                 $insert_topic = $conn->prepare("INSERT INTO rw_bank_topic (topic_name, program_course_id, no_of_questions) VALUES (?, ?, 0)");
                 $insert_topic->bind_param("si", $topic_name, $program_course_id);
                 $insert_topic->execute();
                 
-                // Commit transaction
                 $conn->commit();
                 
                 $response['success'] = true;
@@ -63,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['topic_id'] = $conn->insert_id;
                 
             } catch (Exception $e) {
-                // Rollback on error
                 $conn->rollback();
                 $response['success'] = false;
                 $response['message'] = $e->getMessage();
@@ -74,12 +68,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['message'] = 'Missing required parameters';
     }
     
-    // Return JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
     exit();
 }
 ?>
+
+<style>
+/* Popup overlay */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Popup box */
+.popup-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 420px;
+    max-width: 95%;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Close button */
+.popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #555;
+    cursor: pointer;
+}
+.popup-close:hover {
+    color: #000;
+}
+
+/* Title */
+.popup-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: #1E1A43;
+}
+
+/* Form inputs */
+.popup-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.popup-input {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Submit button */
+.secondary-button {
+    background: #413E81;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.secondary-button:hover {
+    background: #333274;
+}
+</style>
 
 <!-- Add Topic Popup -->
 <div id="topic-popup-overlay" class="popup-overlay">
@@ -88,32 +159,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2 class="popup-title">Add New Topic</h2>
 
         <form id="topic-form" class="popup-form">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>Course</label>
-                    <select name="course_id" required class="popup-input">
-                        <option value="">Select course</option>
-                        <?php
-                        // Fetch courses for dropdown
-                        $courses_query = "SELECT c.* FROM rw_bank_course c 
-                                        JOIN rw_bank_program_course pc ON c.course_id = pc.course_id 
-                                        WHERE pc.program_id = ? AND c.created_by = ?
-                                        ORDER BY c.course_name";
-                        $stmt = $conn->prepare($courses_query);
-                        $stmt->bind_param("ii", $program_id, $created_by);
-                        $stmt->execute();
-                        $courses = $stmt->get_result();
+            <div class="form-group">
+                <label>Course</label>
+                <select name="course_id" required class="popup-input">
+                    <option value="">Select course</option>
+                    <?php
+                    $courses_query = "SELECT c.* FROM rw_bank_course c 
+                                    JOIN rw_bank_program_course pc ON c.course_id = pc.course_id 
+                                    WHERE pc.program_id = ? AND c.created_by = ?
+                                    ORDER BY c.course_name";
+                    $stmt = $conn->prepare($courses_query);
+                    $stmt->bind_param("ii", $program_id, $created_by);
+                    $stmt->execute();
+                    $courses = $stmt->get_result();
 
-                        while ($course = $courses->fetch_assoc()) {
-                            echo '<option value="' . $course['course_id'] . '">' . htmlspecialchars($course['course_name']) . '</option>';
-                        }
-                        ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Topic Name</label>
-                    <input type="text" name="topic_name" required class="popup-input" placeholder="Enter topic name" />
-                </div>
+                    while ($course = $courses->fetch_assoc()) {
+                        echo '<option value="' . $course['course_id'] . '">' . htmlspecialchars($course['course_name']) . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Topic Name</label>
+                <input type="text" name="topic_name" required class="popup-input" placeholder="Enter topic name" />
             </div>
             <div class="modal-footer">
                 <button type="submit" class="secondary-button">Add Topic</button>
@@ -146,6 +214,9 @@ document.getElementById('topic-form').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            closeTopicPopup(); 
+            this.reset(); 
+
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
@@ -153,6 +224,7 @@ document.getElementById('topic-form').addEventListener('submit', function(e) {
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
+                // Add new topic dynamically or reload
                 location.reload();
             });
         } else {
