@@ -189,6 +189,7 @@ if (!$program) {
             font-weight: bold;
             color: #1E1A43;
             margin: 0;
+            flex-grow: 1;
         }
         .course-toggle {
             background: none;
@@ -212,6 +213,7 @@ if (!$program) {
         }
         .course-details {
             padding: 20px;
+            position: relative; /* Added for meatball menu positioning */
         }
 
         /* TOPICS SECTION */
@@ -271,20 +273,20 @@ if (!$program) {
         .no-courses {
             text-align: center;
             color: #666;
-            margin-top: 50 Staffordshire Universitypx;
+            margin-top: 50px;
             font-size: 18px;
             background: #FFFFFF;
             padding: 30px;
             border-radius: 10px;
         }
 
-        /* MEATBALL MENU */
-        .meatball-menu {
+        /* MEATBALL MENU (Shared for Topics and Courses) */
+        .meatball-menu-container {
             position: absolute;
             top: 12px;
             right: 12px;
         }
-        .meatball-button {
+        .meatball-menu-btn {
             background: none;
             border: none;
             font-size: 18px;
@@ -292,10 +294,10 @@ if (!$program) {
             color: #666;
             transition: color 0.2s ease;
         }
-        .meatball-button:hover {
+        .meatball-menu-btn:hover {
             color: #000;
         }
-        .meatball-dropdown {
+        .meatball-menu {
             display: none;
             position: absolute;
             right: 0;
@@ -306,7 +308,10 @@ if (!$program) {
             box-shadow: 0 4px 12px rgba(0,0,0,0.12);
             z-index: 1000;
         }
-        .meatball-dropdown a {
+        .meatball-menu.show {
+            display: block;
+        }
+        .meatball-menu a {
             display: block;
             padding: 8px 14px;
             font-size: 14px;
@@ -314,7 +319,7 @@ if (!$program) {
             text-decoration: none;
             transition: background 0.2s ease;
         }
-        .meatball-dropdown a:hover {
+        .meatball-menu a:hover {
             background: #f6f6f6;
         }
 
@@ -341,6 +346,69 @@ if (!$program) {
             align-items: center;
             gap: 8px; 
         }
+
+        /* Course Edit Popup */
+        #course-edit-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .course-edit-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            max-width: 90%;
+            position: relative;
+        }
+        .course-edit-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #666;
+        }
+        .course-edit-form .form-group {
+            margin-bottom: 15px;
+        }
+        .course-edit-form .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #1E1A43;
+        }
+        .course-edit-form .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .course-edit-form .modal-footer {
+            text-align: right;
+        }
+        .course-edit-form .modal-footer button {
+            background: #413E81;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .course-edit-form .modal-footer button:hover {
+            background: #333274;
+        }
     </style>
 </head>
 
@@ -357,17 +425,17 @@ if (!$program) {
 </div>
 
 <div class="content-wrapper">
-<div class="controls-section">
-    <!-- Grouped back button + search bar -->
-    <div class="search-wrapper">
-        <a href="databank.php" class="search-back-btn">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <div class="long-search-bar">
-            <input type="text" placeholder="Search courses..." id="course-search-input">
-            <button id="course-search-btn"><i class="fas fa-search"></i></button>
+    <div class="controls-section">
+        <!-- Grouped back button + search bar -->
+        <div class="search-wrapper">
+            <a href="databank.php" class="search-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="long-search-bar">
+                <input type="text" placeholder="Search courses..." id="course-search-input">
+                <button id="course-search-btn"><i class="fas fa-search"></i></button>
+            </div>
         </div>
-    </div>
         <div class="button-group">
             <button class="primary-button add-course-btn">
                 <i class="fas fa-plus"></i> Add Course
@@ -396,7 +464,7 @@ if (!$program) {
         if ($courses->num_rows > 0) {
             while ($course = $courses->fetch_assoc()) {
         ?>
-        <div class="course-item">
+        <div class="course-item" data-course-id="<?php echo htmlspecialchars($course['course_id']); ?>">
             <div class="course-header">
                 <h3 class="course-name"><?php echo htmlspecialchars($course['course_name']); ?></h3>
                 <button class="course-toggle">
@@ -405,11 +473,25 @@ if (!$program) {
             </div>
             <div class="course-content">
                 <div class="course-details">
+                    <!-- Course Meatball Menu -->
+                    <div class="meatball-menu-container">
+                        <button class="meatball-menu-btn">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="meatball-menu">
+                            <a href="#" class="edit-course-btn" data-course-id="<?php echo $course['course_id']; ?>" 
+                               data-course-name="<?php echo htmlspecialchars($course['course_name']); ?>">
+                                <i class="fas fa-pen"></i> Edit
+                            </a>
+                            <a href="#" class="delete-course-btn" data-course-id="<?php echo $course['course_id']; ?>">
+                                <i class="fas fa-trash"></i> Delete
+                            </a>
+                        </div>
+                    </div>
                     <div class="topics-section">
                         <h4>Topics</h4>
                         <div class="topic-container">
                             <?php
-                            // Fetch topics for this course
                             $topics_query = $conn->prepare("
                                 SELECT t.*, pc.program_course_id 
                                 FROM rw_bank_topic t 
@@ -469,6 +551,25 @@ if (!$program) {
     </div>
 </div>
 
+<!-- Course Edit Popup -->
+<div id="course-edit-overlay" class="popup-overlay">
+    <div class="course-edit-content">
+        <button class="course-edit-close">&times;</button>
+        <h2 class="popup-title">Edit Course</h2>
+        <form id="course-edit-form" class="course-edit-form">
+            <div class="form-group">
+                <label>Course Name</label>
+                <input type="text" name="course_name" id="edit_course_name" required class="popup-input" placeholder="Enter course name" />
+            </div>
+            <input type="hidden" name="course_id" id="edit_course_id" />
+            <input type="hidden" name="program_id" value="<?php echo htmlspecialchars($program_id); ?>" />
+            <div class="modal-footer">
+                <button type="submit" class="secondary-button">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?php
 include('databank_add_course.php');
 include('databank_add_topic.php');
@@ -503,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 attachCourseToggleListeners();
                 attachMeatballMenuListeners();
                 attachTopicActionListeners();
+                attachCourseActionListeners();
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -538,7 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ======== TOGGLE COURSE CONTENT ========
     function attachCourseToggleListeners() {
         document.querySelectorAll('.course-header').forEach(header => {
-            header.addEventListener('click', function () {
+            header.addEventListener('click', function (e) {
+                // Prevent toggle when clicking meatball menu
+                if (e.target.closest('.meatball-menu-container')) return;
                 const content = this.nextElementSibling;
                 const toggleIcon = this.querySelector('.course-toggle i');
 
@@ -550,12 +654,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ======== TOPIC MEATBALL MENU ========
+    // ======== MEATBALL MENU (Topics and Courses) ========
     function attachMeatballMenuListeners() {
-        document.querySelectorAll('.topic-card .meatball-menu-btn').forEach(btn => {
+        document.querySelectorAll('.meatball-menu-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
-                document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => {
+                // Close other meatball menus
+                document.querySelectorAll('.meatball-menu-container').forEach(c => {
                     if (c !== btn.parentElement) c.classList.remove('show');
                 });
                 btn.parentElement.classList.toggle('show');
@@ -564,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Close meatball menu when clicking outside
         document.addEventListener('click', () => {
-            document.querySelectorAll('.topic-card .meatball-menu-container').forEach(c => c.classList.remove('show'));
+            document.querySelectorAll('.meatball-menu-container').forEach(c => c.classList.remove('show'));
         });
     }
 
@@ -672,6 +777,163 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ======== COURSE ACTIONS ========
+    function attachCourseActionListeners() {
+        document.querySelectorAll('.course-item').forEach(courseItem => {
+            // Edit course
+            courseItem.querySelector('.edit-course-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const courseId = e.target.closest('.edit-course-btn').getAttribute('data-course-id');
+                const courseName = e.target.closest('.edit-course-btn').getAttribute('data-course-name');
+
+                const courseEditOverlay = document.getElementById('course-edit-overlay');
+                const courseEditForm = document.getElementById('course-edit-form');
+
+                if (courseEditForm) {
+                    courseEditForm.querySelector('#edit_course_id').value = courseId;
+                    courseEditForm.querySelector('#edit_course_name').value = courseName;
+                    courseEditOverlay.style.display = 'flex';
+                    courseEditForm.querySelector('#edit_course_name').focus();
+                }
+            });
+
+            // Delete course
+            courseItem.querySelector('.delete-course-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const courseId = e.target.closest('.delete-course-btn').getAttribute('data-course-id');
+                const courseName = courseItem.querySelector('.course-name').textContent;
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to delete "${courseName}" and all its topics. This action cannot be undone!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'rgba(255, 108, 108, 1)',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    customClass: { confirmButton: 'swal-btn' }
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        fetch('databank_delete_course.php', {
+                            method: 'POST',
+                            body: new URLSearchParams({ course_id: courseId, program_id: programId })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Course has been deleted.',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    performSearch(); // Refresh the list
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: data.message || 'Failed to delete course.',
+                                    confirmButtonText: 'OK',
+                                    customClass: { confirmButton: 'swal-btn' }
+                                });
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Unexpected error occurred.',
+                                confirmButtonText: 'OK',
+                                customClass: { confirmButton: 'swal-btn' }
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    }
+
+    // ======== EDIT COURSE ========
+    const courseEditOverlay = document.getElementById('course-edit-overlay');
+    const courseEditForm = document.getElementById('course-edit-form');
+    const courseEditCloseBtn = courseEditOverlay?.querySelector('.course-edit-close');
+
+    courseEditCloseBtn?.addEventListener('click', () => {
+        courseEditOverlay.style.display = 'none';
+        courseEditForm.reset();
+    });
+
+    courseEditOverlay?.addEventListener('click', (e) => {
+        if (e.target === courseEditOverlay) {
+            courseEditOverlay.style.display = 'none';
+            courseEditForm.reset();
+        }
+    });
+
+    courseEditForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const courseName = courseEditForm.querySelector('#edit_course_name').value.trim();
+        const courseId = courseEditForm.querySelector('#edit_course_id').value;
+        const programId = courseEditForm.querySelector('[name="program_id"]').value;
+
+        if (!courseName) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please enter a course name',
+                confirmButtonText: 'OK',
+                customClass: { confirmButton: 'swal-btn' }
+            });
+            return;
+        }
+
+        fetch('databank_edit_course.php', {
+            method: 'POST',
+            body: new URLSearchParams({
+                course_id: courseId,
+                course_name: courseName,
+                program_id: programId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                courseEditOverlay.style.display = 'none';
+                courseEditForm.reset();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Course updated successfully',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    performSearch(); // Refresh the list
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update course',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unexpected error occurred',
+                confirmButtonText: 'OK',
+                customClass: { confirmButton: 'swal-btn' }
+            });
+        });
+    });
+
     // ======== EDIT TOPIC ========
     const topicEditOverlay = document.getElementById('topic-edit-overlay');
     const topicEditForm = document.getElementById('edit-topic-form');
@@ -749,6 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
     attachCourseToggleListeners();
     attachMeatballMenuListeners();
     attachTopicActionListeners();
+    attachCourseActionListeners();
 });
 </script>
 
