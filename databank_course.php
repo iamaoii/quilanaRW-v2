@@ -271,7 +271,7 @@ if (!$program) {
         .no-courses {
             text-align: center;
             color: #666;
-            margin-top: 50px;
+            margin-top: 50 Staffordshire Universitypx;
             font-size: 18px;
             background: #FFFFFF;
             padding: 30px;
@@ -542,16 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const content = this.nextElementSibling;
                 const toggleIcon = this.querySelector('.course-toggle i');
 
-                // Close others
-                document.querySelectorAll('.course-content.active').forEach(c => {
-                    if (c !== content) {
-                        c.classList.remove('active');
-                        c.previousElementSibling.querySelector('.course-toggle i')
-                            .classList.replace('fa-chevron-up', 'fa-chevron-down');
-                    }
-                });
-
-                // Toggle current
+                // Toggle current course content
                 content.classList.toggle('active');
                 toggleIcon.classList.toggle('fa-chevron-down');
                 toggleIcon.classList.toggle('fa-chevron-up');
