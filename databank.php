@@ -21,7 +21,250 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Databank | Quilana</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Global */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #fff;
+            color: #1E1A43;
+        }
 
+        /* Controls Row */
+        .databank-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 35px;
+            flex-wrap: wrap;
+        }
+
+        /* Search Bar */
+        .long-search-bar {
+            display: flex;
+            align-items: center;
+            border: 1px solid #3B276E;
+            border-radius: 10px;
+            padding: 0 10px;
+            width: 100%;
+            max-width: 750px;
+            min-height: 40px;
+        }
+        .long-search-bar input[type="text"] {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 14px;
+        }
+        .long-search-bar button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #737791;
+        }
+        .long-search-bar button:hover {
+            color: #4A4CA6;
+        }
+
+        /* Add Program Button */
+        .add-program-btn {
+            background: linear-gradient(90deg, #333274 0%, #413E81 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 18px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600; /* Bolder text for Add Program */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .add-program-btn:hover {
+            background: #333274;
+        }
+        .add-program-btn i.fas.fa-plus {
+            font-size: 12px; /* Smaller plus icon */
+        }
+
+        /* Header */
+        .programs-header {
+            font-size: 30px;
+            margin: 20px 35px;
+            color: #1E1A43;
+            font-weight: bold;
+        }
+
+        /* Program Cards */
+        .program-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 29px;
+            margin: 50px 35px;
+        }
+        .program-card {
+            background: #FFFFFF;
+            border: 1px solid #F0EFEF;
+            border-radius: 20px;
+            width: 341px;
+            height: 162px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        .program-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1E1A43;
+            margin: 0;
+        }
+        .view-details-btn {
+            background: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 113px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            align-self: flex-start;
+            margin-top: auto;
+            text-decoration: none;
+            text-align: center;
+        }
+        .no-programs-yet {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        /* Meatball Menu */
+        .meatball-menu-container {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+        }
+        .meatball-menu-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s ease;
+        }
+        .meatball-menu-btn:hover {
+            color: #000;
+        }
+        .meatball-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 28px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            z-index: 1000;
+        }
+        .meatball-menu.show {
+            display: block;
+        }
+        .meatball-menu a {
+            display: block;
+            padding: 8px 14px;
+            font-size: 14px;
+            color: #333;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+        .meatball-menu a:hover {
+            background: #f6f6f6;
+        }
+
+        /* Popup Overlay */
+        #program-edit-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #program-edit-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            max-width: 90%;
+            position: relative;
+        }
+        .program-popup-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #666;
+        }
+        .popup-form .form-group {
+            margin-bottom: 15px;
+        }
+        .popup-form .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #1E1A43;
+        }
+        .popup-form .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .popup-form .modal-footer {
+            text-align: right;
+        }
+        .popup-form .modal-footer button {
+            background: #413E81;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .popup-form .modal-footer button:hover {
+            background: #333274;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .databank-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .long-search-bar {
+                max-width: 100%;
+            }
+            .add-program-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <?php include('nav_bar.php'); ?>
