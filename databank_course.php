@@ -671,10 +671,14 @@ $programName = htmlspecialchars($program['program_name']);
 
             fetch('databank_course_search.php', {
                 method: 'POST',
-                credentials: 'same-origin',
                 body: formData
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return res.json();
+            })
             .then(data => {
                 if (data.success) {
                     courseList.innerHTML = data.html;
@@ -684,12 +688,13 @@ $programName = htmlspecialchars($program['program_name']);
                     attachCourseActionListeners();
                 } else {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to perform search',
+                        icon: 'info',
+                        title: 'No Results',
+                        text: data.message || 'No courses or topics found',
                         confirmButtonText: 'OK',
                         customClass: { confirmButton: 'swal-btn' }
                     });
+                    courseList.innerHTML = '<p class="no-courses">No courses or topics found</p>';
                 }
             })
             .catch(err => {

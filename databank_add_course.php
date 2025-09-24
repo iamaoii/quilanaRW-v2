@@ -2,17 +2,15 @@
 include 'db_connect.php';
 include 'auth.php';
 
-// Check if user is logged in and redirect if not
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!isset($_SESSION['login_user_type'])) {
     header("Location: login.php");
     exit();
 }
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = array();
 
@@ -83,126 +81,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
 }
 ?>
-
-<!-- Add Course Popup -->
-<div id="course-popup-overlay" class="popup-overlay">
-    <div class="popup-content" role="document">
-        <button class="popup-close course-popup-close">&times;</button>
-        <h2 class="popup-title">Add New Course</h2>
-
-        <form id="course-form" class="popup-form">
-            <div class="modal-body">
-                <div id="course-msg"></div>
-                <div class="form-group">
-                    <label>Course Name</label>
-                    <input type="text" name="course_name" required class="popup-input" placeholder="Enter course name" />
-                </div>
-                <input type="hidden" name="program_id" value="<?php echo isset($program_id) ? htmlspecialchars($program_id) : ''; ?>" />
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="secondary-button">Add Course</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const coursePopup = document.getElementById('course-popup-overlay');
-    const courseForm = document.getElementById('course-form');
-    const addCourseBtn = document.querySelector('.add-course-btn');
-
-    // Open modal on add button click
-    if (addCourseBtn && coursePopup) {
-        addCourseBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            coursePopup.style.display = 'flex';
-            courseForm.querySelector('[name="course_name"]').focus();
-        });
-    }
-
-    // Close on X button click
-    const courseCloseBtn = coursePopup ? coursePopup.querySelector('.course-popup-close') : null;
-    if (courseCloseBtn && courseForm && coursePopup) {
-        courseCloseBtn.addEventListener('click', () => {
-            coursePopup.style.display = 'none';
-            courseForm.reset();
-        });
-    }
-
-    // Close on overlay click
-    if (coursePopup) {
-        coursePopup.addEventListener('click', (e) => {
-            if (e.target === coursePopup) {
-                coursePopup.style.display = 'none';
-                courseForm.reset();
-            }
-        });
-    }
-
-    // Handle form submission
-    if (courseForm) {
-        courseForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            let courseName = this.querySelector('[name="course_name"]').value.trim();
-
-            if (courseName === "") {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please enter a course name',
-                    confirmButtonText: 'OK',
-                    customClass: { confirmButton: 'swal-btn' }
-                });
-                return;
-            }
-
-            const formData = new FormData(this);
-
-            fetch('databank_add_course.php', {
-                method: 'POST',
-                credentials: 'same-origin',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Close popup
-                    coursePopup.style.display = 'none';
-                    courseForm.reset();
-
-                    // Show success message
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: data.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message,
-                        confirmButtonText: 'OK',
-                        customClass: { confirmButton: 'swal-btn' }
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An unexpected error occurred',
-                    confirmButtonText: 'OK',
-                    customClass: { confirmButton: 'swal-btn' }
-                });
-            });
-        });
-    }
-});
-</script>
