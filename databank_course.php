@@ -61,6 +61,13 @@ $programName = htmlspecialchars($program['program_name']);
             margin: 20px 35px;
             flex-wrap: wrap;
         }
+        
+        .databank-course-wrapper {
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            padding:0px;
+            padding-right: 0;
+        }
 
         /* Back Button */
         .back-btn {
@@ -225,10 +232,11 @@ $programName = htmlspecialchars($program['program_name']);
             transition: max-height 0.3s ease;
         }
         .course-content.active {
-            max-height: 500px;
+            max-height: 2000px;
         }
         .course-details {
             padding: 20px;
+            padding-right: 0;
             position: relative;
         }
 
@@ -239,12 +247,24 @@ $programName = htmlspecialchars($program['program_name']);
             font-size: 18px;
             font-weight: bold;
         }
+
         .topic-container {
+            max-height: none;
+            overflow-y: visible;
             display: flex;
             flex-wrap: wrap;
             gap: 29px;
             margin-bottom: 20px;
+            margin-right: 0;
+            padding-right: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
+
+        .topic-container::-webkit-scrollbar {
+            display: none;
+        }
+
         .topic-card {
             margin: 0 0 0 15px;
             background: #FFFFFF;
@@ -266,18 +286,21 @@ $programName = htmlspecialchars($program['program_name']);
             margin: 0;
         }
         .view-details-btn {
+            white-space: nowrap; 
+            display: block;
             background: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%);
             color: #fff;
-            border: none;
+            border: 1px #f7f7f7ff;
             border-radius: 10px;
-            padding: 8px 113px;
+            padding: 3px 0px;
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            align-self: flex-start;
-            margin-top: auto;
+            margin: 0 3px 3px 3px;
             text-decoration: none;
             text-align: center;
+            width: calc(100% - 2px);
+            box-sizing: border-box;
         }
         .no-topics {
             text-align: center;
@@ -405,6 +428,12 @@ $programName = htmlspecialchars($program['program_name']);
 
         /* RESPONSIVENESS */
         @media (max-width: 768px) {
+            .topic-container {
+                max-height: 300px;  
+                overflow-y: auto;
+                -ms-overflow-style: none; 
+                scrollbar-width: thin;
+            }  
             .course-controls {
                 flex-direction: column;
                 align-items: flex-start;
@@ -417,6 +446,7 @@ $programName = htmlspecialchars($program['program_name']);
                 width: 100%;
             }
         }
+
     </style>
 </head>
 
@@ -424,6 +454,7 @@ $programName = htmlspecialchars($program['program_name']);
 
 <body>
     <div class="content-wrapper">
+        <div class="databank-course-wrapper">
         <!-- Controls Row -->
         <div class="course-controls">
             <!-- Back Button -->
@@ -533,7 +564,7 @@ $programName = htmlspecialchars($program['program_name']);
                                             </a>
                                         </div>
                                     </div>
-                                    <a href="#" class="view-details-btn" data-topic-id="<?php echo $topic['topic_id']; ?>">View Details</a>
+                                    <a href="#" class="view-details-btn" data-topic-id="<?php echo $topic['topic_id']; ?>">View Questions</a>
                                 </div>
                                 <?php
                                     }
@@ -554,6 +585,7 @@ $programName = htmlspecialchars($program['program_name']);
             }
             $course_query->close();
             ?>
+        </div>
         </div>
     </div>
 
@@ -978,10 +1010,11 @@ $programName = htmlspecialchars($program['program_name']);
                         text: `You are about to delete "${topicName}". This action cannot be undone!`,
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: 'rgba(255, 108, 108, 1)',
                         cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Yes, delete it!',
-                        customClass: { confirmButton: 'swal-btn' }
+                        customClass: { confirmButton: 'swal-btn', 
+                                        cancelButton: 'swal-btn' 
+                                    }
                     }).then(result => {
                         if (result.isConfirmed) {
                             fetch('databank_delete_topic.php', {
@@ -1083,10 +1116,10 @@ $programName = htmlspecialchars($program['program_name']);
                         text: `You are about to delete "${courseName}" and all its topics. This action cannot be undone!`,
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: 'rgba(255, 108, 108, 1)',
-                        cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Yes, delete it!',
-                        customClass: { confirmButton: 'swal-btn' }
+                        customClass: { confirmButton: 'swal-btn',
+                                        cancelButton: 'swal-btn'
+                         }
                     }).then(result => {
                         if (result.isConfirmed) {
                             fetch('databank_delete_course.php', {
