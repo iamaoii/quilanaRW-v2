@@ -564,7 +564,10 @@ $programName = htmlspecialchars($program['program_name']);
                                             </a>
                                         </div>
                                     </div>
-                                    <a href="#" class="view-details-btn" data-topic-id="<?php echo $topic['topic_id']; ?>">View Questions</a>
+                                    <a href="#" class="view-details-btn" 
+                                        data-topic-id="<?php echo $topic['topic_id']; ?>"
+                                        data-course-id="<?php echo $course['course_id']; ?>"
+                                        data-program-id="<?php echo $program_id; ?>">View Questions</a>
                                 </div>
                                 <?php
                                     }
@@ -1059,14 +1062,11 @@ $programName = htmlspecialchars($program['program_name']);
 
                 topicCard.querySelector('.view-details-btn')?.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const topicName = topicCard.querySelector('.topic-name').textContent;
-                    Swal.fire({
-                        title: 'Topic Details',
-                        text: `Viewing details for: ${topicName}`,
-                        icon: 'info',
-                        confirmButtonText: 'OK',
-                        customClass: { confirmButton: 'swal-btn' }
-                    });
+                    const topicId = e.target.getAttribute('data-topic-id'); 
+                    const courseId = e.target.getAttribute('data-course-id'); 
+                    const programId = e.target.getAttribute('data-program-id');
+                    console.log('Attributes:', { topicId, courseId, programId });
+                    window.location.href = `databank_manage_question.php?program_id=${programId}&course_id=${courseId}&topic_id=${topicId}`;
                 });
 
                 topicCard.querySelector('.edit-topic-btn')?.addEventListener('click', (e) => {
