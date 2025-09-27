@@ -31,9 +31,20 @@
             <a href="faculty_dashboard.php" class="sidebar-item">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard
             </a>
+            
             <a href="classes.php" class="sidebar-item">
                 <i class="fa fa-list-alt sidebar-icon"></i> Classes
             </a>
+            
+                <?php
+            $current_page = basename($_SERVER['PHP_SELF']);
+            $is_databank = ($current_page == 'databank.php' || strpos($current_page, 'databank_') === 0);
+            ?>
+
+            <a href="databank.php" class="sidebar-item <?php echo $is_databank ? 'active' : ''; ?>">
+                <i class="fa fa-database sidebar-icon"></i> Data Bank
+            </a>
+
         <?php else: ?>
             <a href="student_dashboard.php" class="sidebar-item">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard
