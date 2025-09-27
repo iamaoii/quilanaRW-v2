@@ -8,7 +8,7 @@ a:focus {
 
 /* BODY */
 body {
-    overflow: hidden;
+    overflow: auto;
     margin: 0;
     height: 100vh;
     position: relative;
@@ -769,7 +769,7 @@ body {
     height: 100vh;
     transition: margin-left 0.3s;
     margin-left: 20px;
-    margin-right: 20px;
+    margin-right: 0px;
     padding-top: 60px;
 }
 .content-wrapper.active {
@@ -1057,29 +1057,33 @@ thead th {
     box-sizing: border-box;
 }
 .swal2-actions {
+    display: flex !important;
+    flex-direction: row !important;
     width: 100% !important;
     justify-content: center !important;
+    gap: 10px !important;
     margin: 0 !important;
     padding: 45px 20px !important;
     box-sizing: border-box;
 }
 .swal-btn {
-    background-image: linear-gradient(to right, #8794F2, #6E72C1);
+    background-image: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%); 
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 7px;
     font-weight: bold;
-    width: 100% !important;
-    max-width: 90% !important;
-    margin: 0 auto !important;
-    padding: 14px 0 !important;
+    width: auto;
+    margin: auto !important;
+    padding: 10px 20px !important;
     font-size: 16px !important;
     text-align: center;
     line-height: normal !important;
     box-sizing: border-box;
+    flex:1;
 }
+
 .swal-btn:hover {
-    background-color: #4A4CA6 !important;
+    background-color: #20215c !important;
     background-image: none !important;
     cursor: pointer;
     box-shadow: 4px 4px 15px rgba(0,0,0,0.25);
@@ -1088,6 +1092,7 @@ thead th {
 /* SCROLLBAR */
 ::-webkit-scrollbar {
     width: 10px;
+    margin-right: 0;
 }
 ::-webkit-scrollbar-track {
     background: #f1f1f1;

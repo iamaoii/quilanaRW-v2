@@ -29,6 +29,13 @@ if (!isset($_SESSION['login_user_type'])) {
             color: #1E1A43;
         }
 
+        .databank-program-wrapper {
+            height: calc(100vh - 60px); /* adjust so it sits below navbar */
+            overflow-y: auto;           /* scroll only inside this wrapper */
+            box-sizing: border-box;
+        }
+
+
         /* Controls Row */
         .databank-controls {
             display: flex;
@@ -122,6 +129,7 @@ if (!isset($_SESSION['login_user_type'])) {
             margin: 0;
         }
         .view-details-btn {
+            white-space: nowrap;
             background: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%);
             color: #fff;
             border: none;
@@ -270,6 +278,7 @@ if (!isset($_SESSION['login_user_type'])) {
 
 <body>
     <div class="content-wrapper">
+        <div class="databank-program-wrapper">
         <!-- Search + Button -->
         <div class="databank-controls">
             <div class="long-search-bar">
@@ -311,6 +320,7 @@ if (!isset($_SESSION['login_user_type'])) {
                 echo '<p class="no-programs-yet">No programs yet</p>'; 
             } 
             ?>
+        </div>
         </div>
     </div>
 
@@ -435,10 +445,10 @@ if (!isset($_SESSION['login_user_type'])) {
                             text: `You are about to delete "${programName}". This action cannot be undone!`,
                             icon: 'warning',
                             showCancelButton: true,
-                            cancelButtonColor: '#3085d6',
-                            confirmButtonColor: 'rgba(206, 98, 98, 1)',
                             confirmButtonText: 'Yes, delete it!',
-                            customClass: { confirmButton: 'swal-btn' }
+                            customClass: { confirmButton: 'swal-btn',
+                                            cancelButton: 'swal-btn'
+                             }
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 const formData = new FormData();
