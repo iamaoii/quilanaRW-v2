@@ -109,6 +109,21 @@
         .option-item {
             margin-bottom: 5px;
         }
+        .question-item.selected {
+            background-color: #e3f2fd !important;
+            border-left: 4px solid #2196F3 !important;
+        }
+        .question-checkbox {
+            margin-right: 10px;
+        }
+        #add_to_btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #confirm_add_to:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -221,7 +236,7 @@
                 <button class="btn btn-primary mt-3" id="select_question_btn">
                     <i class="fa fa-list-check"></i> Select Question
                 </button>
-                <button class="btn btn-primary mt-3" id="add_to_btn">
+                <button class="btn btn-primary mt-3" id="add_to_btn" disabled>
                     <i class="fa fa-folder-plus"></i> Add To...
                 </button>
             </div>
@@ -430,6 +445,47 @@
         </div>
     </div>
 
+    <!-- Add To Modal -->
+    <div class="modal fade" id="addToModal" tabindex="-1" aria-labelledby="addToModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToModalLabel">Add Selected Questions To</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Assessment:</label>
+                        <select class="form-control" id="existing_assessment">
+                            <option value="">Choose existing assessment...</option>
+                            <option value="1">Example Assessment 1</option>
+                            <option value="2">Example Assessment 2</option>
+                            <option value="3">Example Assessment 3</option>
+                        </select>
+                    </div>
+                    <div class="text-center mb-3">- OR -</div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-success" id="new_assessment_btn">
+                            <i class="fa fa-plus-circle"></i> Create New Assessment
+                        </button>
+                    </div>
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <small class="text-muted">
+                            <strong>Selected Questions:</strong>
+                            <span id="selected_questions_count">0</span> question(s) selected
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm_add_to" disabled>
+                        <i class="fa fa-save"></i> Add to Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -495,6 +551,127 @@
                 $('#manageQuestionLabel').text('Add New Question');
             });
 
+            // Selection mode state
+            let selectionMode = false;
+            let selectedQuestions = new Set();
+
+            // Select Question Button
+            $('#select_question_btn').click(function() {
+                selectionMode = !selectionMode;
+                toggleSelectionMode();
+            });
+
+            // Add To Button
+            $('#add_to_btn').click(function() {
+                if (selectedQuestions.size > 0) {
+                    $('#selected_questions_count').text(selectedQuestions.size);
+                    $('#addToModal').modal('show');
+                }
+            });
+
+            // Toggle selection mode
+            function toggleSelectionMode() {
+                if (selectionMode) {
+                    $('#select_question_btn').html('<i class="fa fa-times"></i> Cancel Selection');
+                    $('#select_question_btn').removeClass('btn-primary').addClass('btn-warning');
+                    $('.list-group-item').addClass('selectable').css('cursor', 'pointer');
+                    
+                    // Add checkboxes to each question
+                    $('.list-group-item').each(function() {
+                        const questionId = $(this).find('.edit_question').data('id');
+                        if (!$(this).find('.question-checkbox').length) {
+                            $(this).prepend(`
+                                <div class="form-check question-checkbox">
+                                    <input class="form-check-input" type="checkbox" value="${questionId}" id="question_${questionId}">
+                                </div>
+                            `);
+                        }
+                    });
+                } else {
+                    $('#select_question_btn').html('<i class="fa fa-list-check"></i> Select Question');
+                    $('#select_question_btn').removeClass('btn-warning').addClass('btn-primary');
+                    $('.list-group-item').removeClass('selectable selected').css('cursor', 'default');
+                    $('.question-checkbox').remove();
+                    selectedQuestions.clear();
+                    updateAddToButton();
+                }
+            }
+
+            // Handle question selection
+            $(document).on('change', '.question-checkbox input', function() {
+                const questionId = $(this).val();
+                const questionItem = $(this).closest('.list-group-item');
+                
+                if ($(this).is(':checked')) {
+                    selectedQuestions.add(questionId);
+                    questionItem.addClass('selected');
+                } else {
+                    selectedQuestions.delete(questionId);
+                    questionItem.removeClass('selected');
+                }
+                
+                updateAddToButton();
+            });
+
+            // Update Add To button state
+            function updateAddToButton() {
+                if (selectedQuestions.size > 0) {
+                    $('#add_to_btn').prop('disabled', false);
+                    $('#add_to_btn').html(`<i class="fa fa-folder-plus"></i> Add To... (${selectedQuestions.size})`);
+                } else {
+                    $('#add_to_btn').prop('disabled', true);
+                    $('#add_to_btn').html('<i class="fa fa-folder-plus"></i> Add To...');
+                }
+            }
+
+            // Handle click on question items in selection mode
+            $(document).on('click', '.list-group-item.selectable', function(e) {
+                if (!$(e.target).is('input, button, a, .btn')) {
+                    const checkbox = $(this).find('.question-checkbox input');
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    checkbox.trigger('change');
+                }
+            });
+
+            // Assessment selection handling
+            $('#existing_assessment').change(function() {
+                const assessmentSelected = $(this).val() !== '';
+                $('#confirm_add_to').prop('disabled', !assessmentSelected);
+            });
+
+            // New Assessment button
+            $('#new_assessment_btn').click(function() {
+                // For now, just enable the confirm button
+                $('#confirm_add_to').prop('disabled', false);
+                $('#existing_assessment').val(''); // Clear existing selection
+                alert('New assessment creation functionality will be implemented later.');
+            });
+
+            // Confirm Add To
+            $('#confirm_add_to').click(function() {
+                const assessmentId = $('#existing_assessment').val();
+                const questionIds = Array.from(selectedQuestions);
+                
+                console.log('Adding questions to assessment:', {
+                    assessmentId: assessmentId,
+                    questionIds: questionIds
+                });
+                
+                // Show success message
+                alert(`Successfully added ${questionIds.length} question(s) to assessment!`);
+                
+                // Close modal and reset selection
+                $('#addToModal').modal('hide');
+                selectionMode = false;
+                toggleSelectionMode();
+            });
+
+            // Reset modal when closed
+            $('#addToModal').on('hidden.bs.modal', function() {
+                $('#existing_assessment').val('');
+                $('#confirm_add_to').prop('disabled', true);
+            });
+
             // Form submission
             $('#question-frm').submit(function(e) {
                 e.preventDefault();
@@ -504,7 +681,7 @@
                 const questionType = $('#question_type').val();
                 const questionId = $('input[name="id"]').val();
                 const url = questionId ? 'databank_ajax_update_question.php' : 'databank_ajax_save_question.php';
-                
+
                 // Basic validation
                 if (!questionType) {
                     alert('Please select a question type');
