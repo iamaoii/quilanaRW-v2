@@ -964,7 +964,10 @@ $programName = htmlspecialchars($program['program_name']);
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        performSearch();
+                        // Instead of just performSearch(), redirect with proper parameters
+                        const currentUrl = new URL(window.location.href);
+                        const programId = currentUrl.searchParams.get('id');
+                        window.location.href = `databank_course.php?id=${programId}`;
                     });
                 } else {
                     Swal.fire({
@@ -1065,7 +1068,15 @@ $programName = htmlspecialchars($program['program_name']);
                     const topicId = e.target.getAttribute('data-topic-id'); 
                     const courseId = e.target.getAttribute('data-course-id'); 
                     const programId = e.target.getAttribute('data-program-id');
-                    console.log('Attributes:', { topicId, courseId, programId });
+                    
+                    console.log('Redirecting with:', { programId, courseId, topicId });
+                    
+                    if (!programId || !courseId || !topicId) {
+                        console.error('Missing parameters:', { programId, courseId, topicId });
+                        alert('Error: Missing required parameters');
+                        return;
+                    }
+                    
                     window.location.href = `databank_manage_question.php?program_id=${programId}&course_id=${courseId}&topic_id=${topicId}`;
                 });
 

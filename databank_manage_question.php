@@ -502,6 +502,8 @@
                 // Get form data
                 const formData = new FormData(this);
                 const questionType = $('#question_type').val();
+                const questionId = $('input[name="id"]').val();
+                const url = questionId ? 'databank_ajax_update_question.php' : 'databank_ajax_save_question.php';
                 
                 // Basic validation
                 if (!questionType) {
@@ -518,7 +520,7 @@
                 $('#save_question_btn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
                 
                 // Send AJAX request
-                fetch('ajax_save_question.php', {
+                fetch(url, {
                     method: 'POST',
                     body: formData
                 })
@@ -540,6 +542,136 @@
                 .finally(() => {
                     $('#save_question_btn').prop('disabled', false).html('Save Question');
                 });
+            });
+
+            // Delete Question Functionality
+            $(document).on('click', '.remove_question', function() {
+                const questionId = $(this).data('id');
+                
+                if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+                    // Show loading state
+                    $(this).html('<i class="fa fa-spinner fa-spin"></i>');
+                    $(this).prop('disabled', true);
+                    
+                    fetch('databank_ajax_delete_question.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'question_id=' + questionId
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Question deleted successfully!');
+                            location.reload(); // Reload to reflect changes
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to delete question'));
+                            $(this).html('<i class="fa fa-trash"></i>');
+                            $(this).prop('disabled', false);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Network error occurred');
+                        $(this).html('<i class="fa fa-trash"></i>');
+                        $(this).prop('disabled', false);
+                    });
+                }
+            });
+
+            // Edit Question Functionality
+            $(document).on('click', '.edit_question', function() {
+                const questionId = $(this).data('id');
+                
+                // Fetch question data and populate the modal
+                fetch('databank_ajax_get_question.php?question_id=' + questionId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Populate the modal with existing data
+                        $('#manageQuestionLabel').text('Edit Question');
+                        $('input[name="id"]').val(questionId);
+                        $('#question_type').val(data.question.question_type);
+                        $('#question_text').val(data.question.question_text);
+                        $('#difficulty').val(data.question.difficulty);
+                        
+                        // Show appropriate options based on question type
+                        $('#question_type').trigger('change');
+                        
+                        // Populate options/answers based on question type
+                        if (['1', '2', '3'].includes(data.question.question_type)) {
+                            // For multiple choice, checkbox, true/false - populate options
+                            populateOptions(data.options, data.question.question_type);
+                        } else {
+                            // For identification/fill blank - populate answer
+                            if (data.answer) {
+                                if (data.question.question_type === '4') {
+                                    $('#identification_answer').val(data.answer.correct_answer);
+                                } else {
+                                    $('#fill_blank_answer').val(data.answer.correct_answer);
+                                }
+                            }
+                        }
+                        
+                        $('#manage_question').modal('show');
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to load question data'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error occurred');
+                });
+            });
+
+            // Function to populate options (for edit mode)
+            function populateOptions(options, questionType) {
+                // Clear existing options
+                $('#mc_options, #cb_options').empty();
+                
+                if (questionType === '3') {
+                    // True/False - check the correct radio button
+                    const correctAnswer = options.find(opt => opt.is_correct == 1);
+                    if (correctAnswer) {
+                        if (correctAnswer.option_text === 'True') {
+                            $('input[name="tf_answer"][value="true"]').prop('checked', true);
+                        } else {
+                            $('input[name="tf_answer"][value="false"]').prop('checked', true);
+                        }
+                    }
+                } else {
+                    // Multiple choice or checkbox
+                    options.forEach((option, index) => {
+                        const optionHtml = `
+                            <div class="option-group d-flex align-items-center mb-2">
+                                <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text">${option.option_text}</textarea>
+                                <label>
+                                    <input type="${questionType === '1' ? 'radio' : 'checkbox'}" 
+                                        name="${questionType === '1' ? 'is_right' : 'is_right[]'}" 
+                                        value="${index}" 
+                                        ${option.is_correct ? 'checked' : ''}>
+                                    Correct
+                                </label>
+                                <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
+                            </div>
+                        `;
+                        
+                        if (questionType === '1') {
+                            $('#mc_options').append(optionHtml);
+                        } else {
+                            $('#cb_options').append(optionHtml);
+                        }
+                    });
+                }
+            }
+
+            // Reset modal when closed
+            $('#manage_question').on('hidden.bs.modal', function() {
+                $('#question-frm')[0].reset();
+                $('.question-type-options').hide();
+                $('#manageQuestionLabel').text('Add New Question');
+                $('input[name="id"]').val('');
             });
         });
     </script>
