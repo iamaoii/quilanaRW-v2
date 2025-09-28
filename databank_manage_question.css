@@ -1,0 +1,117 @@
+.reviewer {
+  padding: 10px;
+}
+.reviewer-details {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+.reviewer-details h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+.reviewer-details p {
+  margin-bottom: 5px;
+  font-size: 1em;
+  color: #666;
+}
+.card-full-width {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+}
+.card-header {
+  background-color: #e0e0ec !important;
+  font-weight: bold;
+  border-bottom: none !important;
+}
+.card-body {
+  height: 55vh;
+  max-height: auto;
+  overflow-y: auto;
+}
+.card-body::-webkit-scrollbar {
+  display: none;
+}
+
+.list-group {
+  gap: 15px;
+}
+.list-group-item {
+  border-left: 4px solid #4a4ca6 !important;
+  background-color: #f9f9f9 !important;
+}
+.list-group-item h6 {
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+.list-group-item p {
+  margin: 0;
+}
+.list-group-item .question-number {
+  font-weight: bold;
+  color: #4a4ca6;
+  margin-bottom: 10px;
+}
+
+.back-arrow {
+  font-size: 24px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+.back-arrow a {
+  color: #4a4ca6;
+  text-decoration: none;
+}
+.back-arrow a:hover {
+  color: #0056b3;
+}
+.btn-primary {
+  background-color: #4a4ca6;
+  border-color: #4a4ca6;
+}
+.btn-primary:hover {
+  background-color: #3a3b8c;
+  border-color: #3a3b8c;
+}
+
+.float-right {
+  display: flex;
+  gap: 8px;
+}
+.mt-3 {
+  display: flex;
+  gap: 10px;
+}
+.option-list {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+.correct-answer {
+  color: #28a745;
+  font-weight: bold;
+}
+.option-item {
+  margin-bottom: 5px;
+}
+.question-item.selected {
+  background-color: #e3f2fd !important;
+  border-left: 4px solid #2196f3 !important;
+}
+.question-checkbox {
+  margin-right: 10px;
+}
+#add_to_btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+#confirm_add_to:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
