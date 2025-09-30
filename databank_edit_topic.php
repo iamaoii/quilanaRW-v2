@@ -82,19 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     cursor: pointer;
 }
 
-.popup-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #3b276e;
-    border-radius: 12px;
-    font-size: 15px;
-    outline: none;
-}
-.popup-input:focus {
-    border-color: #7e57c2;
-    box-shadow: 0 0 10px rgba(126,87,194,0.6);
-}
-
 .modal-footer {
     margin-top: 20px;
     display: flex;

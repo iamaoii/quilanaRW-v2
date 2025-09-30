@@ -334,6 +334,7 @@ body {
     margin: 0;
 }
 .view-details-btn {
+    white-space: nowrap;
     background: linear-gradient(90deg, #6E72C1 0%, #4A4CA6 100%);
     color: #ffff;
     border: none;
@@ -345,6 +346,8 @@ body {
     align-self: flex-start;
     margin-top: auto;
     text-decoration: none;
+    text-align: center;
+    
 }
 .view-details-btn:hover {
     text-decoration: none;
