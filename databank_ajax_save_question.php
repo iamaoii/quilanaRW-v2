@@ -26,6 +26,15 @@ try {
         throw new Exception('Missing required fields');
     }
 
+    // Validate topic_id exists and belongs to user
+    $topic_check = $conn->prepare("SELECT topic_id FROM rw_bank_topic WHERE topic_id = ?");
+    $topic_check->bind_param("i", $topic_id);
+    $topic_check->execute();
+    if ($topic_check->get_result()->num_rows === 0) {
+        throw new Exception('Invalid topic ID');
+    }
+    $topic_check->close();
+
     // Start transaction
     $conn->begin_transaction();
 
@@ -149,6 +158,18 @@ try {
         default:
             throw new Exception('Invalid question type');
     }
+
+    // Update no_of_questions in rw_bank_topic
+    $update_stmt = $conn->prepare("
+        UPDATE rw_bank_topic 
+        SET no_of_questions = (SELECT COUNT(*) FROM rw_bank_question WHERE topic_id = ?) 
+        WHERE topic_id = ?
+    ");
+    $update_stmt->bind_param("ii", $topic_id, $topic_id);
+    if (!$update_stmt->execute()) {
+        throw new Exception('Failed to update topic question count: ' . $update_stmt->error);
+    }
+    $update_stmt->close();
 
     // Commit transaction
     $conn->commit();
