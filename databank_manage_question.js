@@ -21,12 +21,12 @@ $(document).ready(function () {
   $("#add_mc_option").click(function () {
     const optionCount = $("#mc_options .option-group").length;
     const newOption = `
-            <div class="option-group d-flex align-items-center mb-2">
-                <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
-                <label><input type="radio" name="is_right" value="${optionCount}"> Correct</label>
-                <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
-            </div>
-        `;
+      <div class="option-group d-flex align-items-center mb-2">
+        <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
+        <label><input type="radio" name="is_right" value="${optionCount}"> Correct</label>
+        <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
+      </div>
+    `;
     $("#mc_options").append(newOption);
   });
 
@@ -34,12 +34,12 @@ $(document).ready(function () {
   $("#add_cb_option").click(function () {
     const optionCount = $("#cb_options .option-group").length;
     const newOption = `
-            <div class="option-group d-flex align-items-center mb-2">
-                <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
-                <label><input type="checkbox" name="is_right[]" value="${optionCount}"> Correct</label>
-                <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
-            </div>
-        `;
+      <div class="option-group d-flex align-items-center mb-2">
+        <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
+        <label><input type="checkbox" name="is_right[]" value="${optionCount}"> Correct</label>
+        <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
+      </div>
+    `;
     $("#cb_options").append(newOption);
   });
 
@@ -94,10 +94,10 @@ $(document).ready(function () {
         const questionId = $(this).find(".edit_question").data("id");
         if (!$(this).find(".question-checkbox").length) {
           $(this).prepend(`
-                        <div class="form-check question-checkbox">
-                            <input class="form-check-input" type="checkbox" value="${questionId}" id="question_${questionId}">
-                        </div>
-                    `);
+            <div class="form-check question-checkbox">
+              <input class="form-check-input" type="checkbox" value="${questionId}" id="question_${questionId}">
+            </div>
+          `);
         }
       });
     } else {
@@ -160,46 +160,134 @@ $(document).ready(function () {
     $("#confirm_add_to").prop("disabled", !assessmentSelected);
   });
 
-  // New Assessment button
+  // ------------------------
+  // CREATE NEW ASSESSMENT FLOW
+  // ------------------------
   $("#new_assessment_btn").click(function () {
-    // For now, just enable the confirm button
-    $("#confirm_add_to").prop("disabled", false);
-    $("#existing_assessment").val(""); // Clear existing selection
-    alert("New assessment creation functionality will be implemented later.");
+    $("#newAssessmentModal").modal("show");
+    $("#new_assessment_selected_count").text(selectedQuestions.size);
   });
 
-  // Confirm Add To
+  $(document).on("submit", "#new_assessment_form", function (e) {
+    e.preventDefault();
+    const title = $("#new_assessment_title").val().trim();
+    const type = $("#new_assessment_type").val();
+
+    if (!title || !type) {
+      alert("Please enter assessment name and type.");
+      return;
+    }
+
+    $("#new_assessment_submit").prop("disabled", true).text("Creating...");
+
+    const formData = new FormData();
+    formData.append("assessment_title", title);
+    formData.append("assessment_type", type);
+
+    fetch("databank_ajax_create_assessment.php", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          const assessmentId = data.assessment_id;
+          addSelectedQuestionsToAssessment(assessmentId, function (
+            successAdd,
+            message
+          ) {
+            $("#newAssessmentModal").modal("hide");
+            if (successAdd) {
+              alert("Assessment created and questions added successfully!");
+              location.reload();
+            } else {
+              alert(
+                "Assessment created but failed to add questions: " + message
+              );
+              location.reload();
+            }
+          });
+        } else {
+          alert("Error creating assessment: " + (data.message || "Unknown"));
+        }
+      })
+      .catch((err) => {
+        console.error("Create error:", err);
+        alert("Network error occurred.");
+      })
+      .finally(() => {
+        $("#new_assessment_submit")
+          .prop("disabled", false)
+          .text("Create & Add");
+      });
+  });
+
+  // Central function to add questions
+  function addSelectedQuestionsToAssessment(assessmentId, cb) {
+    const questionIds = Array.from(selectedQuestions);
+    if (!assessmentId || questionIds.length === 0) {
+      cb(false, "No assessment or no selected questions.");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.append("assessment_id", assessmentId);
+    questionIds.forEach((qid) => params.append("question_ids[]", qid));
+
+    fetch("databank_ajax_add_to_assessment.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          cb(true, data.message || "Added");
+        } else {
+          cb(false, data.message || "Failed to add");
+        }
+      })
+      .catch((err) => {
+        console.error("Add to assess error:", err);
+        cb(false, "Network error");
+      });
+  }
+
+  // ------------------------
+  // CONFIRM ADD TO (existing assessment)
+  // ------------------------
   $("#confirm_add_to").click(function () {
     const assessmentId = $("#existing_assessment").val();
-    const questionIds = Array.from(selectedQuestions);
+    if (!assessmentId) {
+      alert("Please select an existing assessment or create a new one.");
+      return;
+    }
 
-    console.log("Adding questions to assessment:", {
-      assessmentId: assessmentId,
-      questionIds: questionIds,
+    addSelectedQuestionsToAssessment(assessmentId, function (success, message) {
+      if (success) {
+        alert(message);
+        $("#addToModal").modal("hide");
+        selectionMode = false;
+        toggleSelectionMode();
+        location.reload();
+      } else {
+        alert("Error: " + message);
+      }
     });
-
-    // Show success message
-    alert(
-      `Successfully added ${questionIds.length} question(s) to assessment!`
-    );
-
-    // Close modal and reset selection
-    $("#addToModal").modal("hide");
-    selectionMode = false;
-    toggleSelectionMode();
   });
 
-  // Reset modal when closed
+  // Reset Add To modal
   $("#addToModal").on("hidden.bs.modal", function () {
     $("#existing_assessment").val("");
     $("#confirm_add_to").prop("disabled", true);
   });
 
-  // Form submission
+  // ------------------------
+  // FORM SUBMIT (Add/Edit Question)
+  // ------------------------
   $("#question-frm").submit(function (e) {
     e.preventDefault();
 
-    // Get form data
     const formData = new FormData(this);
     const questionType = $("#question_type").val();
     const questionId = $('input[name="id"]').val();
@@ -207,7 +295,6 @@ $(document).ready(function () {
       ? "databank_ajax_update_question.php"
       : "databank_ajax_save_question.php";
 
-    // Basic validation
     if (!questionType) {
       alert("Please select a question type");
       return;
@@ -218,12 +305,10 @@ $(document).ready(function () {
       return;
     }
 
-    // Show loading state
     $("#save_question_btn")
       .prop("disabled", true)
       .html('<i class="fa fa-spinner fa-spin"></i> Saving...');
 
-    // Send AJAX request
     fetch(url, {
       method: "POST",
       body: formData,
@@ -231,10 +316,9 @@ $(document).ready(function () {
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          // Success - close modal and refresh questions
           $("#manage_question").modal("hide");
           alert("Question saved successfully!");
-          location.reload(); // Reload page to show new question
+          location.reload();
         } else {
           alert("Error: " + (data.message || "Failed to save question"));
         }
@@ -248,7 +332,9 @@ $(document).ready(function () {
       });
   });
 
-  // Delete Question Functionality
+  // ------------------------
+  // DELETE Question
+  // ------------------------
   $(document).on("click", ".remove_question", function () {
     const questionId = $(this).data("id");
 
@@ -257,7 +343,6 @@ $(document).ready(function () {
         "Are you sure you want to delete this question? This action cannot be undone."
       )
     ) {
-      // Show loading state
       $(this).html('<i class="fa fa-spinner fa-spin"></i>');
       $(this).prop("disabled", true);
 
@@ -272,7 +357,7 @@ $(document).ready(function () {
         .then((data) => {
           if (data.success) {
             alert("Question deleted successfully!");
-            location.reload(); // Reload to reflect changes
+            location.reload();
           } else {
             alert("Error: " + (data.message || "Failed to delete question"));
             $(this).html('<i class="fa fa-trash"></i>');
@@ -288,31 +373,27 @@ $(document).ready(function () {
     }
   });
 
-  // Edit Question Functionality
+  // ------------------------
+  // EDIT Question
+  // ------------------------
   $(document).on("click", ".edit_question", function () {
     const questionId = $(this).data("id");
 
-    // Fetch question data and populate the modal
     fetch("databank_ajax_get_question.php?question_id=" + questionId)
       .then((response) => response.json())
       .then((data) => {
         if (data.success) {
-          // Populate the modal with existing data
           $("#manageQuestionLabel").text("Edit Question");
           $('input[name="id"]').val(questionId);
           $("#question_type").val(data.question.question_type);
           $("#question_text").val(data.question.question_text);
           $("#difficulty").val(data.question.difficulty);
 
-          // Show appropriate options based on question type
           $("#question_type").trigger("change");
 
-          // Populate options/answers based on question type
           if (["1", "2", "3"].includes(data.question.question_type)) {
-            // For multiple choice, checkbox, true/false - populate options
             populateOptions(data.options, data.question.question_type);
           } else {
-            // For identification/fill blank - populate answer
             if (data.answer) {
               if (data.question.question_type === "4") {
                 $("#identification_answer").val(data.answer.correct_answer);
@@ -335,11 +416,9 @@ $(document).ready(function () {
 
   // Function to populate options (for edit mode)
   function populateOptions(options, questionType) {
-    // Clear existing options
     $("#mc_options, #cb_options").empty();
 
     if (questionType === "3") {
-      // True/False - check the correct radio button
       const correctAnswer = options.find((opt) => opt.is_correct == 1);
       if (correctAnswer) {
         if (correctAnswer.option_text === "True") {
@@ -349,30 +428,20 @@ $(document).ready(function () {
         }
       }
     } else {
-      // Multiple choice or checkbox
       options.forEach((option, index) => {
         const optionHtml = `
-                    <div class="option-group d-flex align-items-center mb-2">
-                        <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text">${
-                          option.option_text
-                        }</textarea>
-                        <label>
-                            <input type="${
-                              questionType === "1" ? "radio" : "checkbox"
-                            }" 
-                                name="${
-                                  questionType === "1"
-                                    ? "is_right"
-                                    : "is_right[]"
-                                }" 
-                                value="${index}" 
-                                ${option.is_correct ? "checked" : ""}>
-                            Correct
-                        </label>
-                        <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
-                    </div>
-                `;
-
+          <div class="option-group d-flex align-items-center mb-2">
+            <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text">${option.option_text}</textarea>
+            <label>
+              <input type="${questionType === "1" ? "radio" : "checkbox"}"
+                name="${questionType === "1" ? "is_right" : "is_right[]"}"
+                value="${index}"
+                ${option.is_correct ? "checked" : ""}>
+              Correct
+            </label>
+            <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
+          </div>
+        `;
         if (questionType === "1") {
           $("#mc_options").append(optionHtml);
         } else {

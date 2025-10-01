@@ -24,6 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        // Delete child records first
+        $stmt = $conn->prepare("DELETE FROM rw_bank_assessment_question WHERE assessment_id = ?");
+        $stmt->bind_param("i", $assessmentId);
+        $stmt->execute();
+        $stmt->close();
+
+        // Delete the assessment itself (only if user is owner)
         $stmt = $conn->prepare("DELETE FROM rw_bank_assessment WHERE assessment_id = ? AND created_by = ?");
         $stmt->bind_param("ii", $assessmentId, $_SESSION['login_id']);
         $stmt->execute();
