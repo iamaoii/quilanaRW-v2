@@ -6,6 +6,34 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="databank_manage_question.css">
+    <!-- Inline CSS for responsive add question modal -->
+    <style>
+        .option-group {
+            flex-wrap: wrap; /* Allow wrapping */
+            gap: 10px; /* Space between elements */
+        }
+        .option-group textarea {
+            min-width: 200px; /* Prevent too narrow */
+            flex: 1 1 auto; /* Grow but allow wrapping */
+        }
+        .option-group label, .option-group button {
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        @media (max-width: 576px) {
+            .option-group {
+                flex-direction: column; /* Stack vertically */
+                align-items: stretch;
+            }
+            .option-group textarea,
+            .option-group label,
+            .option-group button {
+                width: 100%; /* Full width on small screens */
+            }
+            .option-group button.remove-option {
+                margin-top: 5px; /* Space above button */
+            }
+        }
+    </style>
 </head>
 <body>
 <?php
@@ -149,7 +177,8 @@ if ($stmt = $conn->prepare($topic_query)) {
                     echo '<p><strong>Created:</strong> ' . htmlspecialchars($row['date_created']) . '</p>';
 
                     // Show options or answers
-                    if (in_array($row['question_type'], ['multiple_choice', 'checkbox', 'true_false'])) {
+                    // Fixed: Use integer values for question_type to match database (char '1', '2', '3')
+                    if (in_array($row['question_type'], ['1', '2', '3'])) {
                         $options_query = "
                             SELECT option_text, is_correct 
                             FROM rw_bank_question_option 
@@ -208,7 +237,7 @@ if ($stmt = $conn->prepare($topic_query)) {
     </div>
 </div>
 
-<!-- Add/Edit Question Modal (still intact) -->
+<!-- Add/Edit Question Modal -->
 <div class="modal fade" id="manage_question" tabindex="-1" aria-labelledby="manageQuestionLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -248,7 +277,7 @@ if ($stmt = $conn->prepare($topic_query)) {
                         </select>
                     </div>
 
-                    <!-- Options per type ... (unchanged from OG) -->
+                    <!-- Options per type -->
                     <div id="multiple_choice_options" class="question-type-options" style="display: none;">
                         <label>Options:</label>
                         <div class="form-group" id="mc_options">
@@ -348,6 +377,45 @@ if ($stmt = $conn->prepare($topic_query)) {
                     <i class="fa fa-save"></i> Add to Assessment
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Assessment Modal -->
+<div class="modal fade" id="newAssessmentModal" tabindex="-1" aria-labelledby="newAssessmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newAssessmentModalLabel">Create New Assessment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="new_assessment_form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="new_assessment_title" class="form-label">Assessment Title</label>
+                        <input type="text" class="form-control" id="new_assessment_title" name="assessment_title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_assessment_type" class="form-label">Assessment Type</label>
+                        <select class="form-control" id="new_assessment_type" name="assessment_type" required>
+                            <option value="">Select Type</option>
+                            <option value="1">Normal</option>
+                            <option value="2">Quiz Bee</option>
+                            <option value="3">Speed</option>
+                        </select>
+                    </div>
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <small class="text-muted">
+                            <strong>Selected Questions:</strong>
+                            <span id="new_assessment_selected_count">0</span> question(s) selected
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="new_assessment_submit">Create & Add</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
