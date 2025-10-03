@@ -4,11 +4,13 @@ include 'auth.php';
 
 // Handle update when form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $response = ['success' => false, 'message' => ''];
+
     $topic_id   = $_POST['topic_id'] ?? null;
-    $topic_name = $_POST['topic_name'] ?? '';
+    $topic_name = trim($_POST['topic_name'] ?? '');
 
     if ($topic_id && $topic_name) {
-        // Checks for duplicate 
+        // Check for duplicate
         $check = $conn->prepare("SELECT COUNT(*) FROM rw_bank_topic WHERE topic_name = ? AND topic_id != ?");
         $check->bind_param("si", $topic_name, $topic_id);
         $check->execute();
@@ -17,28 +19,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->close();
 
         if ($count > 0) {
-            echo "duplicate";
-            exit;
-        }
-
-        $stmt = $conn->prepare("UPDATE rw_bank_topic SET topic_name = ? WHERE topic_id = ?");
-        if (!$stmt) {
-            die("Prepare failed: " . $conn->error);
-        }
-
-        $stmt->bind_param("si", $topic_name, $topic_id);
-
-        if ($stmt->execute()) {
-            echo "success";
+            $response['message'] = 'Topic already exists';
         } else {
-            echo "error: " . $stmt->error;
+            $stmt = $conn->prepare("UPDATE rw_bank_topic SET topic_name = ? WHERE topic_id = ?");
+            if ($stmt && $stmt->bind_param("si", $topic_name, $topic_id) && $stmt->execute()) {
+                $response['success'] = true;
+                $response['message'] = 'Topic updated successfully';
+            } else {
+                $response['message'] = 'Database error: ' . $conn->error;
+            }
+            if ($stmt) $stmt->close();
         }
-
-        $stmt->close();
     } else {
-        echo "error: missing topic_id or topic_name";
+        $response['message'] = 'Missing topic_id or topic_name';
     }
-    exit; 
+
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit;
 }
 ?>
 
@@ -80,19 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     background: none;
     border: none;
     cursor: pointer;
-}
-
-.popup-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #3b276e;
-    border-radius: 12px;
-    font-size: 15px;
-    outline: none;
-}
-.popup-input:focus {
-    border-color: #7e57c2;
-    box-shadow: 0 0 10px rgba(126,87,194,0.6);
 }
 
 .modal-footer {

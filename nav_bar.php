@@ -27,36 +27,58 @@
     </nav>
 
     <div id="sidebar">
-        <?php if($_SESSION['login_user_type'] != 3): ?>
-            <a href="faculty_dashboard.php" class="sidebar-item">
+        <?php
+        $current_page = basename($_SERVER['PHP_SELF']);
+        ?>
+
+        <?php if ($_SESSION['login_user_type'] != 3): ?>
+            <!-- Faculty Sidebar -->
+            <?php
+            $is_dashboard   = ($current_page == 'faculty_dashboard.php');
+            $is_classes     = ($current_page == 'classes.php');
+            $is_databank    = ($current_page == 'databank.php' || strpos($current_page, 'databank_') === 0);
+            $is_assessments = ($current_page == 'assessments.php' || strpos($current_page, 'assessments_') === 0);
+            ?>
+            
+            <a href="faculty_dashboard.php" class="sidebar-item <?php echo $is_dashboard ? 'active' : ''; ?>">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard
             </a>
-            
-            <a href="classes.php" class="sidebar-item">
+
+            <a href="classes.php" class="sidebar-item <?php echo $is_classes ? 'active' : ''; ?>">
                 <i class="fa fa-list-alt sidebar-icon"></i> Classes
             </a>
-            
-                <?php
-            $current_page = basename($_SERVER['PHP_SELF']);
-            $is_databank = ($current_page == 'databank.php' || strpos($current_page, 'databank_') === 0);
-            ?>
 
             <a href="databank.php" class="sidebar-item <?php echo $is_databank ? 'active' : ''; ?>">
                 <i class="fa fa-database sidebar-icon"></i> Data Bank
             </a>
 
+            <a href="assessments.php" class="sidebar-item <?php echo $is_assessments ? 'active' : ''; ?>">
+                <i class="fa fa-pencil-square-o sidebar-icon"></i> Assessments
+            </a>
+
         <?php else: ?>
-            <a href="student_dashboard.php" class="sidebar-item">
+            <!-- Student Sidebar -->
+            <?php
+            $is_dashboard = ($current_page == 'student_dashboard.php');
+            $is_classes   = ($current_page == 'class_enrolled.php');
+            $is_reviewer  = ($current_page == 'reviewer.php');
+            $is_shared    = ($current_page == 'shared.php');
+            ?>
+
+            <a href="student_dashboard.php" class="sidebar-item <?php echo $is_dashboard ? 'active' : ''; ?>">
                 <i class="fa fa-home sidebar-icon"></i> Dashboard
             </a>
-            <a href="class_enrolled.php" class="sidebar-item">
+
+            <a href="class_enrolled.php" class="sidebar-item <?php echo $is_classes ? 'active' : ''; ?>">
                 <i class="fa fa-book sidebar-icon"></i> Classes
             </a>
-            <a href="reviewer.php" class="sidebar-item">
-                <i class="fas fa-folder sidebar-icon"></i> Reviewer
+
+            <a href="reviewer.php" class="sidebar-item <?php echo $is_reviewer ? 'active' : ''; ?>">
+                <i class="fa fa-folder sidebar-icon"></i> Reviewer
             </a>
-			<a href="shared.php" class="sidebar-item">
-                <i class="fas fa-share-alt sidebar-icon"></i> Shared
+
+            <a href="shared.php" class="sidebar-item <?php echo $is_shared ? 'active' : ''; ?>">
+                <i class="fa fa-share-alt sidebar-icon"></i> Shared
             </a>
         <?php endif; ?>
     </div>

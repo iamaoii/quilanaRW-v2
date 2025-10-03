@@ -14,20 +14,21 @@ try {
         throw new Exception('Question ID is required');
     }
 
-    // Start transaction
     $conn->begin_transaction();
 
-    // First, check if question exists and belongs to user
-    $check_stmt = $conn->prepare("SELECT question_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
+    $check_stmt = $conn->prepare("SELECT question_id, topic_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
     $check_stmt->bind_param("ii", $question_id, $_SESSION['login_id']);
     $check_stmt->execute();
+    $result = $check_stmt->get_result();
     
-    if ($check_stmt->get_result()->num_rows === 0) {
+    if ($result->num_rows === 0) {
         throw new Exception('Question not found or access denied');
     }
+
+    $row = $result->fetch_assoc();
+    $topic_id = $row['topic_id'];
     $check_stmt->close();
 
-    // Delete options/answers first (due to foreign key constraints)
     $delete_options = $conn->prepare("DELETE FROM rw_bank_question_option WHERE question_id = ?");
     $delete_options->bind_param("i", $question_id);
     $delete_options->execute();
@@ -38,7 +39,6 @@ try {
     $delete_answers->execute();
     $delete_answers->close();
 
-    // Delete the question
     $delete_question = $conn->prepare("DELETE FROM rw_bank_question WHERE question_id = ?");
     $delete_question->bind_param("i", $question_id);
     
@@ -46,6 +46,18 @@ try {
         throw new Exception('Failed to delete question: ' . $delete_question->error);
     }
     $delete_question->close();
+
+    // Update no_of_questions in rw_bank_topic
+    $update_stmt = $conn->prepare("
+        UPDATE rw_bank_topic 
+        SET no_of_questions = (SELECT COUNT(*) FROM rw_bank_question WHERE topic_id = ?) 
+        WHERE topic_id = ?
+    ");
+    $update_stmt->bind_param("ii", $topic_id, $topic_id);
+    if (!$update_stmt->execute()) {
+        throw new Exception('Failed to update topic question count: ' . $update_stmt->error);
+    }
+    $update_stmt->close();
 
     $conn->commit();
     
