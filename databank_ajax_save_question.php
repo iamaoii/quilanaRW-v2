@@ -19,6 +19,7 @@ try {
     $question_text = trim($_POST['question_text'] ?? '');
     $question_type = $_POST['question_type'] ?? '';
     $difficulty = $_POST['difficulty'] ?? 'medium';
+    $total_points = $_POST['points'] ?? 1;
     $created_by = $_SESSION['login_id'];
 
     // Basic validation
@@ -40,10 +41,10 @@ try {
 
     // Insert into rw_bank_question table
     $stmt = $conn->prepare("
-        INSERT INTO rw_bank_question (topic_id, question_text, question_type, difficulty, created_by, date_created, date_updated) 
-        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        INSERT INTO rw_bank_question (topic_id, question_text, question_type, difficulty, created_by, total_points, date_created, date_updated) 
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
     ");
-    $stmt->bind_param("isssi", $topic_id, $question_text, $question_type, $difficulty, $created_by);
+    $stmt->bind_param("isssii", $topic_id, $question_text, $question_type, $difficulty, $created_by, $total_points);
     
     if (!$stmt->execute()) {
         throw new Exception('Failed to save question: ' . $stmt->error);

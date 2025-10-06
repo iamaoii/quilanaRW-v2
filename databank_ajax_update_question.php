@@ -20,6 +20,7 @@ try {
     $question_text = trim($_POST['question_text'] ?? '');
     $question_type = $_POST['question_type'] ?? '';
     $difficulty = $_POST['difficulty'] ?? 'medium';
+    $total_points = $_POST['points'] ?? 1;
     $created_by = $_SESSION['login_id'];
 
     // Basic validation
@@ -43,10 +44,10 @@ try {
     // Update the question
     $stmt = $conn->prepare("
         UPDATE rw_bank_question 
-        SET question_text = ?, question_type = ?, difficulty = ?, date_updated = NOW() 
+        SET question_text = ?, question_type = ?, difficulty = ?, total_points = ?, date_updated = NOW() 
         WHERE question_id = ?
     ");
-    $stmt->bind_param("sssi", $question_text, $question_type, $difficulty, $question_id);
+    $stmt->bind_param("sssii", $question_text, $question_type, $difficulty, $total_points, $question_id);
     
     if (!$stmt->execute()) {
         throw new Exception('Failed to update question: ' . $stmt->error);

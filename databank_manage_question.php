@@ -174,6 +174,7 @@ if ($stmt = $conn->prepare($topic_query)) {
                     echo '<h6>' . htmlspecialchars($row['question_text']) . '</h6>';
                     echo '<p><strong>Type:</strong> ' . htmlspecialchars(getQuestionTypeName($row['question_type'])) . '</p>';
                     echo '<p><strong>Difficulty:</strong> ' . htmlspecialchars(getDifficultyName($row['difficulty'])) . '</p>';
+                    echo '<p><strong>Points:</strong> ' . htmlspecialchars($row['total_points'] ?? '1') . '</p>';
                     echo '<p><strong>Created:</strong> ' . htmlspecialchars($row['date_created']) . '</p>';
 
                     // Show options or answers
@@ -275,6 +276,11 @@ if ($stmt = $conn->prepare($topic_query)) {
                             <option value="2">Medium</option>
                             <option value="3">Hard</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="points">Points:</label>
+                        <input type="number" id="points" name="points" class="form-control" value="1" min="1" max="100" required>
                     </div>
 
                     <!-- Options per type -->

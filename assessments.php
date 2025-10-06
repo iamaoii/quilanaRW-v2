@@ -55,35 +55,34 @@ if (!isset($_SESSION['login_user_type'])) {
         <h2 class="programs-header">Assessments</h2>
 
         <!-- Assessment Cards -->
-        <div class="program-container" id="assessment-container">
-            <?php 
-            $qry = $conn->query("SELECT * FROM rw_bank_assessment WHERE created_by = '".$_SESSION['login_id']."' ORDER BY assessment_title ASC"); 
-            if ($qry->num_rows > 0) { 
-                while ($row = $qry->fetch_assoc()) { 
-            ?>
-                <div class="program-card" data-program-id="<?php echo htmlspecialchars($row['assessment_id']); ?>">
-                    <p class="program-name"><?php echo htmlspecialchars($row['assessment_title']); ?></p>
-                    
-                    <!-- Actions -->
-                    <div class="meatball-menu-container">
-                        <button class="meatball-menu-btn">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="meatball-menu">
-                            <a href="#" class="edit" data-assessment-id="<?php echo $row['assessment_id']; ?>" data-assessment-name="<?php echo htmlspecialchars($row['assessment_title']); ?>"><i class="fas fa-pen"></i> Edit</a>
-                            <a href="#" class="delete" data-assessment-id="<?php echo $row['assessment_id']; ?>"><i class="fas fa-trash"></i> Delete</a>
+            <div class="program-container" id="assessment-container">
+                <?php 
+                $qry = $conn->query("SELECT * FROM rw_bank_assessment WHERE created_by = '".$_SESSION['login_id']."' ORDER BY assessment_title ASC"); 
+                if ($qry->num_rows > 0) { 
+                    while ($row = $qry->fetch_assoc()) { 
+                ?>
+                    <div class="program-card" data-program-id="<?php echo htmlspecialchars($row['assessment_id']); ?>">
+                        <p class="program-name"><?php echo htmlspecialchars($row['assessment_title']); ?></p>
+                        
+                        <!-- Actions -->
+                        <div class="meatball-menu-container">
+                            <button class="meatball-menu-btn">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="meatball-menu">
+                                <a href="#" class="edit" data-assessment-id="<?php echo $row['assessment_id']; ?>" data-assessment-name="<?php echo htmlspecialchars($row['assessment_title']); ?>"><i class="fas fa-pen"></i> Edit</a>
+                                <a href="#" class="delete" data-assessment-id="<?php echo $row['assessment_id']; ?>"><i class="fas fa-trash"></i> Delete</a>
+                            </div>
                         </div>
+                        <a href="assessment_questions.php?assessment_id=<?php echo $row['assessment_id']; ?>" class="view-details-btn">View Details</a>
                     </div>
-                    <a href="#" class="view-details-btn">View Details</a>
-                    <!-- <a href="databank_course.php?id=<?php echo $row['assessment_id']; ?>" class="view-details-btn">View Details</a> -->
-                </div>
-            <?php 
+                <?php 
+                    } 
+                } else { 
+                    echo '<p class="no-programs-yet">No assessment created.</p>'; 
                 } 
-            } else { 
-                echo '<p class="no-programs-yet">No assessment created.</p>'; 
-            } 
-            ?>
-        </div>
+                ?>
+            </div>
         </div>
     </div>
 
@@ -355,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <a href="#" class="delete" data-assessment-id="${row.assessment_id}"><i class="fas fa-trash"></i> Delete</a>
                                 </div>
                             </div>
-                            <a href="#" class="view-details-btn">View Details</a>
+                            <a href="assessment_questions.php?assessment_id=${row.assessment_id}" class="view-details-btn">View Details</a>
                         `;
                         assessmentContainer.appendChild(card);
                     });
