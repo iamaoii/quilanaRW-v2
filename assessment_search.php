@@ -21,7 +21,7 @@ try {
         SELECT assessment_id, assessment_title 
         FROM rw_bank_assessment 
         WHERE created_by = ? AND assessment_title LIKE CONCAT('%', ?, '%') 
-        ORDER BY assessment_title ASC
+        ORDER BY assessment_id DESC
     ");
     $stmt->bind_param("is", $userId, $query);
     $stmt->execute();

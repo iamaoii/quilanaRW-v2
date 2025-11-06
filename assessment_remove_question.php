@@ -44,7 +44,7 @@ $query = "
     FROM rw_bank_question q 
     INNER JOIN rw_bank_assessment_question aq ON q.question_id = aq.question_id 
     WHERE aq.assessment_id = ? 
-    ORDER BY aq.date_added ASC
+    ORDER BY aq.date_added DESC
 ";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $assessment_id);

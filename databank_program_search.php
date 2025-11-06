@@ -45,7 +45,7 @@ if ($search) {
     $types .= 's';
 }
 
-$query = "SELECT * FROM rw_bank_program WHERE created_by = ? $where ORDER BY program_name ASC";
+$query = "SELECT * FROM rw_bank_program WHERE created_by = ? $where ORDER BY program_id DESC";
 $stmt = $conn->prepare($query);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();

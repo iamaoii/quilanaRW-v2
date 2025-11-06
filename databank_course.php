@@ -492,7 +492,7 @@ $programName = htmlspecialchars($program['program_name']);
                 INNER JOIN rw_bank_program_course pc 
                 ON c.course_id = pc.course_id 
                 WHERE pc.program_id = ? 
-                ORDER BY c.course_name ASC
+                ORDER BY c.course_id DESC
             ");
             $course_query->bind_param("i", $program_id);
             $course_query->execute();
@@ -535,7 +535,7 @@ $programName = htmlspecialchars($program['program_name']);
                                     INNER JOIN rw_bank_program_course pc 
                                     ON t.program_course_id = pc.program_course_id 
                                     WHERE pc.course_id = ? 
-                                    ORDER BY t.topic_name ASC
+                                    ORDER BY t.topic_id DESC
                                 ");
                                 $topics_query->bind_param("i", $course['course_id']);
                                 $topics_query->execute();
@@ -627,7 +627,7 @@ $programName = htmlspecialchars($program['program_name']);
                             INNER JOIN rw_bank_program_course pc 
                             ON c.course_id = pc.course_id 
                             WHERE pc.program_id = ? 
-                            ORDER BY c.course_name ASC
+                            ORDER BY c.course_id DESC
                         ");
                         $course_query->bind_param("i", $program_id);
                         $course_query->execute();
