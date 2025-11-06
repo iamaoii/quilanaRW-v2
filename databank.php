@@ -294,7 +294,7 @@ if (!isset($_SESSION['login_user_type'])) {
         <!-- Program Cards -->
         <div class="program-container" id="program-container">
             <?php 
-            $qry = $conn->query("SELECT * FROM rw_bank_program WHERE created_by = '".$_SESSION['login_id']."' ORDER BY program_name ASC"); 
+            $qry = $conn->query("SELECT * FROM rw_bank_program ORDER BY program_name ASC");  
             if ($qry->num_rows > 0) { 
                 while ($row = $qry->fetch_assoc()) { 
             ?>
