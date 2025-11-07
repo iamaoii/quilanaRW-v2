@@ -16,15 +16,21 @@
     <?php include('nav_bar.php') ?>
 
 <div class="content-wrapper">
-        <!-- Header Container -->
-        <div class="add-course-container">
-            <form class="search-bar" action="#" method="GET">
-                <input type="text" name="query" placeholder="Search" required>
-                <button type="submit"><i class="fa fa-search"></i></button>
-            </form>
+    <div class="databank-program-wrapper">
+        <!-- Controls Row (match Databank) -->
+        <div class="databank-controls" style="justify-content: flex-start; gap: 12px;">
+            <button id="back_to_programs" title="Back" style="display:none; width:44px; height:44px; border:none; border-radius:10px; background: linear-gradient(90deg, #333274 0%, #413E81 100%); color:#fff; cursor:pointer; display:none; align-items:center; justify-content:center;">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <div class="long-search-bar">
+                <input type="text" placeholder="Search programs" id="classes_search_input" class="databank-search">
+                <button id="classes_search_btn"><i class="fas fa-search"></i></button>
+            </div>
         </div>
 
-        <div class="tabs-container">
+        <!-- Header -->
+        <h2 class="programs-header">Programs</h2>
+        <div class="tabs-container" style="display: none;">
             <ul class="tabs">
                 <li class="tab-link active" data-tab="courses-tab">Programs</li>
                 <li class="tab-link" id="classes-tab-link" style="display: none;" data-tab="classes-tab">Classes</li>
@@ -32,9 +38,9 @@
         </div>
 
         <div id="courses-tab" class="tab-content scrollable-content active">
-            <div class="course-container">
+            <div class="program-container" id="program-container">
                 <?php
-                $qry = $conn->query("SELECT * FROM program WHERE faculty_id = '".$_SESSION['login_id']."' ORDER BY program_name ASC");
+                $qry = $conn->query("SELECT * FROM program WHERE faculty_id = '".$_SESSION['login_id']."' ORDER BY program_id DESC");
                 if ($qry->num_rows > 0) {
                     while ($row = $qry->fetch_assoc()) {
                         $program_id =  $row['program_id'];
@@ -42,10 +48,10 @@
                         $classCountRow = $result->fetch_assoc();
                         $classCount = $classCountRow['classCount'];
                 ?>
-                <div class="course-card">
+                <div class="program-card" data-program-id="<?php echo htmlspecialchars($row['program_id']); ?>">
                     <div class="course-card-body">
-                        <div class="course-card-title"><?php echo $row['program_name'] ?></div>
-                        <div class="course-card-text"><?php echo $classCount ?> Class(es)</div>
+                        <p class="program-name"><?php echo htmlspecialchars($row['program_name']) ?></p>
+                        <div class="course-card-text"><?php echo htmlspecialchars($classCount) ?> Class(es)</div>
                         <div class="course-actions">
                             <button id="viewClasses" class="tertiary-button viewClasses" data-id="<?php echo $row['program_id'] ?>" data-name="<?php echo $row['program_name'] ?>" type="button">Classes</button>
                             <button id="viewCourseDetails" class="main-button" data-id="<?php echo $row['program_id'] ?>" type="button">View Details</button>
@@ -55,14 +61,14 @@
                 <?php
                     }
                 } else {
-                    echo '<div class="no-records" style="grid-column: 1/-1;"> No programs has been added </div>';
+                    echo '<div class="no-records" style="grid-column: 1/-1;">No programs found</div>';
                 }
                 ?>
             </div>
         </div>
 
         <div id="classes-tab" class="tab-content scrollable-content">
-            <div class="course-container" id="class-container">
+            <div class="program-container" id="class-container">
                 <!-- Classes will be dynamically loaded here -->
             </div>
         </div>
@@ -117,6 +123,31 @@
 
     <script>
         $(document).ready(function() {
+            // Debounced search for Programs list (UI consistent with question search)
+            const debounce = (fn, delay) => { let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,args), delay); }; };
+            const $searchInput = $('#classes_search_input');
+            const $searchBtn = $('#classes_search_btn');
+            // no count display per requirement
+            const $cardsContainer = $('.course-container').first();
+
+            function filterPrograms() {
+                const term = ($searchInput.val() || '').toLowerCase().trim();
+                let total = 0, visible = 0;
+                $cardsContainer.find('.course-card').each(function(){
+                    total++;
+                    const name = $(this).find('.course-card-title').text().toLowerCase();
+                    const classesText = $(this).find('.course-card-text').text().toLowerCase();
+                    const haystack = name + ' ' + classesText;
+                    const match = term === '' || haystack.includes(term);
+                    $(this).toggle(match);
+                    if (match) visible++;
+                });
+                // no count display
+            }
+
+            $searchInput.on('input', debounce(filterPrograms, 200));
+            $searchBtn.on('click', function(){ filterPrograms(); });
+
             // Handles Popups
             function showPopup(popupId) {
                 $('#' + popupId).css('display', 'flex');
@@ -321,12 +352,22 @@
                 // Show the Classes tab and set the course name
                 $('#classes-tab-link').show().click();
                 $('#classes-tab-link').text(program_name);
+                $('.programs-header').text(program_name);
+                $('#back_to_programs').show();
 
                 // Fetch and display classes associated with the course
                 getClasses(program_id);
 
                 // Set the hidden course_id field in the add class form
                 $('#add-class-popup input[name="program_id"]').val(program_id);
+            });
+
+            // Back button: return to Programs
+            $('#back_to_programs').on('click', function(){
+                $('.programs-header').text('Programs');
+                $('#classes-tab-link').hide();
+                $('.tab-link[data-tab="courses-tab"]').click();
+                $(this).hide();
             });
 
             function initializeMeatballMenu() {
@@ -383,6 +424,8 @@
                 updateMeatballMenu();
             });
         });
-        </script>
-    </body>
+    </script>
+    </div>
+</div>
+</body>
 </html>

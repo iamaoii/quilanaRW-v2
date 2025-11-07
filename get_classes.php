@@ -9,7 +9,7 @@
                 $program_id = $conn->real_escape_string($_POST['program_id']);
 
                 // Fetch classes associated with the program
-                $sql = "SELECT * FROM class WHERE program_id = '$program_id' ORDER BY class_name ASC";
+                $sql = "SELECT * FROM class WHERE program_id = '$program_id' ORDER BY class_id DESC";
                 $result = $conn->query($sql);
 
                 if ($result->num_rows > 0) {
@@ -42,7 +42,7 @@
         <?php 
                     }
                 } else {
-                    echo '<div class="alert alert-info">No classes found for this program.</div>';
+                    echo '<div class="no-records" style="grid-column: 1/-1; text-align:center; color:#666; font-style:italic;">No classes found</div>';
                 }
 
                 // Close the connection

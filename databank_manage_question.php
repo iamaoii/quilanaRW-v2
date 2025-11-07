@@ -136,15 +136,30 @@ if ($stmt = $conn->prepare($topic_query)) {
             <h2><?php echo htmlspecialchars($topic_name); ?></h2>
             <p><strong>Program:</strong> <?php echo htmlspecialchars($program_name); ?></p>
             <p><strong>Course:</strong> <?php echo htmlspecialchars($course_name); ?></p>
-            <button class="btn btn-primary mt-3" id="add_item_btn">
-                <i class="fa fa-plus"></i> Add Question
-            </button>
-            <button class="btn btn-primary mt-3" id="select_question_btn">
-                <i class="fa fa-list-check"></i> Select Question
-            </button>
-            <button class="btn btn-primary mt-3" id="add_to_btn" disabled>
-                <i class="fa fa-folder-plus"></i> Add To...
-            </button>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="mt-3" style="max-width: 420px; flex: 0 0 420px; margin-right: auto; z-index: 0;">
+                    <div class="long-search-bar">
+                        <input type="text" placeholder="Search questions" id="question_search_input" class="databank-search">
+                        <button id="question_search_btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" id="add_item_btn">
+                    <i class="fa fa-plus"></i> Add Question
+                </button>
+                <button class="btn btn-primary mt-3" id="select_question_btn">
+                    <i class="fa fa-list-check"></i> Select Question
+                </button>
+                <button class="btn btn-primary mt-3" id="add_to_btn" disabled>
+                    <i class="fa fa-folder-plus"></i> Add To...
+                </button>
+                <div class="form-check mt-3" id="select_all_container" style="display: none;">
+                    <input class="form-check-input" type="checkbox" id="select_all_checkbox" style="cursor: pointer; width: 18px; height: 18px;">
+                    <label class="form-check-label ms-2" for="select_all_checkbox" style="cursor: pointer; font-weight: 500;">
+                        Select All
+                    </label>
+                </div>
+            </div>
+            
         </div>
 
         <?php
@@ -289,7 +304,7 @@ if ($stmt = $conn->prepare($topic_query)) {
                         <div class="form-group" id="mc_options">
                             <div class="option-group d-flex align-items-center mb-2">
                                 <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
-                                <label><input type="radio" name="is_right" value="0"> Correct</label>
+                                <label><input type="radio" name="is_right" value="1"> Correct</label>
                                 <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
                             </div>
                         </div>
@@ -301,7 +316,7 @@ if ($stmt = $conn->prepare($topic_query)) {
                         <div class="form-group" id="cb_options">
                             <div class="option-group d-flex align-items-center mb-2">
                                 <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
-                                <label><input type="checkbox" name="is_right[]" value="0"> Correct</label>
+                                <label><input type="checkbox" name="is_right[]" value="1"> Correct</label>
                                 <button type="button" class="btn btn-sm btn-danger ml-2 remove-option">Remove</button>
                             </div>
                         </div>
@@ -355,7 +370,7 @@ if ($stmt = $conn->prepare($topic_query)) {
                     <select class="form-control" id="existing_assessment">
                         <option value="">Choose existing assessment...</option>
                         <?php 
-                        $assessments = $conn->query("SELECT assessment_id, assessment_title FROM rw_bank_assessment WHERE created_by = '".$_SESSION['login_id']."' ORDER BY assessment_title ASC");
+                            $assessments = $conn->query("SELECT assessment_id, assessment_title FROM rw_bank_assessment WHERE created_by = '".$_SESSION['login_id']."' ORDER BY assessment_id DESC");
                         if ($assessments && $assessments->num_rows > 0) {
                             while ($ass = $assessments->fetch_assoc()) {
                                 echo '<option value="'.htmlspecialchars($ass['assessment_id']).'">'.htmlspecialchars($ass['assessment_title']).'</option>';

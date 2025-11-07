@@ -19,7 +19,7 @@ $(document).ready(function () {
 
   // Add multiple choice option
   $("#add_mc_option").click(function () {
-    const optionCount = $("#mc_options .option-group").length;
+    const optionCount = $("#mc_options .option-group").length + 1;
     const newOption = `
             <div class="option-group d-flex align-items-center mb-2">
                 <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
@@ -32,7 +32,7 @@ $(document).ready(function () {
 
   // Add checkbox option
   $("#add_cb_option").click(function () {
-    const optionCount = $("#cb_options .option-group").length;
+    const optionCount = $("#cb_options .option-group").length + 1;
     const newOption = `
             <div class="option-group d-flex align-items-center mb-2">
                 <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text"></textarea>
@@ -47,10 +47,28 @@ $(document).ready(function () {
   $(document).on("click", ".remove-option", function () {
     if ($(".option-group").length > 1) {
       $(this).closest(".option-group").remove();
+      // Reindex checkbox values after removal
+      reindexCheckboxValues();
     } else {
       alert("At least one option is required.");
     }
   });
+
+  // Function to reindex checkbox/radio values
+  function reindexCheckboxValues() {
+    // Reindex multiple choice radio buttons (start from 1)
+    $("#mc_options .option-group").each(function (index) {
+      $(this)
+        .find('input[type="radio"][name="is_right"]')
+        .val(index + 1);
+    });
+    // Reindex checkbox options (start from 1)
+    $("#cb_options .option-group").each(function (index) {
+      $(this)
+        .find('input[type="checkbox"][name="is_right[]"]')
+        .val(index + 1);
+    });
+  }
 
   // Add question button click
   $("#add_item_btn").click(function () {
@@ -89,6 +107,12 @@ $(document).ready(function () {
         .addClass("btn-warning");
       $(".list-group-item").addClass("selectable").css("cursor", "pointer");
 
+      // Show Select All checkbox
+      $("#select_all_container").show();
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", false);
+
       // Add checkboxes to each question
       $(".list-group-item").each(function () {
         const questionId = $(this).find(".edit_question").data("id");
@@ -113,8 +137,36 @@ $(document).ready(function () {
       $(".question-checkbox").remove();
       selectedQuestions.clear();
       updateAddToButton();
+
+      // Hide Select All checkbox
+      $("#select_all_container").hide();
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", false);
     }
   }
+
+  // Handle Select All checkbox
+  $("#select_all_checkbox").change(function () {
+    const isChecked = $(this).is(":checked");
+
+    $(".question-checkbox input").each(function () {
+      const questionId = $(this).val();
+      const questionItem = $(this).closest(".list-group-item");
+
+      $(this).prop("checked", isChecked);
+
+      if (isChecked) {
+        selectedQuestions.add(questionId);
+        questionItem.addClass("selected");
+      } else {
+        selectedQuestions.delete(questionId);
+        questionItem.removeClass("selected");
+      }
+    });
+
+    updateAddToButton();
+  });
 
   // Handle question selection
   $(document).on("change", ".question-checkbox input", function () {
@@ -130,6 +182,7 @@ $(document).ready(function () {
     }
 
     updateAddToButton();
+    updateSelectAllCheckbox();
   });
 
   // Update Add To button state
@@ -142,6 +195,26 @@ $(document).ready(function () {
     } else {
       $("#add_to_btn").prop("disabled", true);
       $("#add_to_btn").html('<i class="fa fa-folder-plus"></i> Add To...');
+    }
+  }
+
+  // Update Select All checkbox state
+  function updateSelectAllCheckbox() {
+    const totalCheckboxes = $(".question-checkbox input").length;
+    const checkedCheckboxes = $(".question-checkbox input:checked").length;
+
+    if (checkedCheckboxes === 0) {
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", false);
+    } else if (checkedCheckboxes === totalCheckboxes) {
+      $("#select_all_checkbox")
+        .prop("checked", true)
+        .prop("indeterminate", false);
+    } else {
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", true);
     }
   }
 
@@ -440,6 +513,7 @@ $(document).ready(function () {
       }
     } else {
       options.forEach((option, index) => {
+        const optionValue = index + 1; // Use 1-based indexing
         const optionHtml = `
                     <div class="option-group d-flex align-items-center mb-2">
                         <textarea rows="2" name="question_opt[]" class="form-control flex-grow-1 mr-2" placeholder="Option text">${
@@ -454,7 +528,7 @@ $(document).ready(function () {
                                     ? "is_right"
                                     : "is_right[]"
                                 }"
-                                value="${index}"
+                                value="${optionValue}"
                                 ${option.is_correct ? "checked" : ""}>
                             Correct
                         </label>
@@ -476,5 +550,95 @@ $(document).ready(function () {
     $(".question-type-options").hide();
     $("#manageQuestionLabel").text("Add New Question");
     $('input[name="id"]').val("");
+  });
+
+  // Search questions functionality (debounced)
+  const debounceFn = (fn, delay) => {
+    let t;
+    return function () {
+      const ctx = this,
+        args = arguments;
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(ctx, args), delay);
+    };
+  };
+
+  function runQuestionFilter(term) {
+    const inputVal = $("#question_search_input, #search_questions").val();
+    const merged = term !== undefined && term !== null ? term : inputVal || "";
+    const searchTerm = merged.toString().toLowerCase().trim();
+
+    if (searchTerm === "") {
+      // Show all questions if search is empty
+      $(".list-group-item").show();
+      $("#no_questions_note").remove();
+      return;
+    }
+
+    // legacy clear btn not used anymore but keep safe
+    $("#clear_search").show();
+
+    let visibleCount = 0; // kept local if needed later
+    let totalCount = $(".list-group-item").length;
+
+    $(".list-group-item").each(function () {
+      const questionText = $(this).find("h6").text().toLowerCase();
+      const questionType = $(this)
+        .find("p:contains('Type:')")
+        .text()
+        .toLowerCase();
+      const difficulty = $(this)
+        .find("p:contains('Difficulty:')")
+        .text()
+        .toLowerCase();
+      const options = $(this).find(".option-item").text().toLowerCase();
+
+      const searchableContent =
+        questionText + " " + questionType + " " + difficulty + " " + options;
+
+      if (searchableContent.includes(searchTerm)) {
+        $(this).show();
+        visibleCount++;
+      } else {
+        $(this).hide();
+      }
+    });
+
+    // Show friendly empty-state if nothing matched
+    const noteId = "#no_questions_note";
+    if (visibleCount === 0) {
+      if (!$(noteId).length) {
+        const note = $(
+          '<div id="no_questions_note" class="text-muted" style="margin-top:20px; text-align:center; font-style: italic;">No questions found matching your search.</div>'
+        );
+        $(".card-body").append(note);
+      }
+    } else {
+      $(noteId).remove();
+    }
+  }
+
+  $("#question_search_input, #search_questions").on(
+    "input",
+    debounceFn(function () {
+      runQuestionFilter($(this).val());
+    }, 50)
+  );
+  $("#question_search_btn").on("click", function () {
+    runQuestionFilter($("#question_search_input").val());
+  });
+
+  // Clear search button
+  $("#clear_search").click(function () {
+    $("#search_questions").val("").trigger("input");
+    $("#search_questions").focus();
+  });
+
+  // Press Enter to search (already works with input event, but this allows explicit action)
+  $("#search_questions").keypress(function (e) {
+    if (e.which === 13) {
+      e.preventDefault();
+      $(this).blur(); // Remove focus to show results clearly
+    }
   });
 });

@@ -56,7 +56,7 @@ FROM rw_bank_course c
 INNER JOIN rw_bank_program_course pc ON c.course_id = pc.course_id 
 LEFT JOIN rw_bank_topic t ON t.program_course_id = pc.program_course_id
 WHERE pc.program_id = ? $where
-ORDER BY c.course_name ASC
+ORDER BY c.course_id DESC
 ";
 
 $stmt = $conn->prepare($query);
@@ -102,7 +102,7 @@ if ($courses->num_rows > 0) {
                         FROM rw_bank_topic t 
                         INNER JOIN rw_bank_program_course pc ON t.program_course_id = pc.program_course_id 
                         WHERE pc.course_id = ? 
-                        ORDER BY t.topic_name ASC
+                        ORDER BY t.topic_id DESC
                     ";
                     $stmt_topics = $conn->prepare($topics_query);
                     $stmt_topics->bind_param("i", $course_id);
