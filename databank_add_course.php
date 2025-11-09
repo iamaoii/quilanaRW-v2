@@ -25,33 +25,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $conn->begin_transaction();
             try {
-                // Check if course exists
-                $check_query = $conn->prepare("SELECT course_id FROM rw_bank_course WHERE course_name = ? AND created_by = ?");
-                $check_query->bind_param("si", $course_name, $created_by);
+                // Check if course exists for this specific program
+                $check_query = $conn->prepare("
+                    SELECT c.course_id 
+                    FROM rw_bank_course c 
+                    INNER JOIN rw_bank_program_course pc ON c.course_id = pc.course_id 
+                    WHERE c.course_name = ? AND pc.program_id = ? AND c.created_by = ?
+                ");
+                // types: s = string (course_name), i = int (program_id), i = int (created_by)
+                $check_query->bind_param("sii", $course_name, $program_id, $created_by);
                 $check_query->execute();
                 $result = $check_query->get_result();
 
                 if ($result->num_rows > 0) {
-                    $course = $result->fetch_assoc();
-                    $course_id = $course['course_id'];
-
-                    // Check if course already linked to this program
-                    $program_check = $conn->prepare("SELECT * FROM rw_bank_program_course WHERE program_id = ? AND course_id = ?");
-                    $program_check->bind_param("ii", $program_id, $course_id);
-                    $program_check->execute();
-
-                    if ($program_check->get_result()->num_rows > 0) {
-                        throw new Exception('This course is already added to this program');
-                    }
-                } else {
-                    // Insert new course
-                    $insert_course = $conn->prepare("INSERT INTO rw_bank_course (course_name, created_by, no_of_topics) VALUES (?, ?, 0)");
-                    $insert_course->bind_param("si", $course_name, $created_by);
-                    if (!$insert_course->execute()) {
-                        throw new Exception('Error creating course: ' . $conn->error);
-                    }
-                    $course_id = $conn->insert_id;
+                    throw new Exception('This course already exists in this program');
                 }
+
+                // Create a new course for this program
+                $insert_course = $conn->prepare("INSERT INTO rw_bank_course (course_name, created_by, no_of_topics) VALUES (?, ?, 0)");
+                $insert_course->bind_param("si", $course_name, $created_by);
+                if (!$insert_course->execute()) {
+                    throw new Exception('Error creating course: ' . $conn->error);
+                }
+                $course_id = $conn->insert_id;
 
                 // Link course to program
                 $link_course = $conn->prepare("INSERT INTO rw_bank_program_course (program_id, course_id) VALUES (?, ?)");
