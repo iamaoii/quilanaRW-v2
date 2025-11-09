@@ -29,8 +29,8 @@ if (!$program_id) {
 
 // Verify program ownership
 $created_by = $_SESSION['login_id'];
-$stmt = $conn->prepare("SELECT * FROM rw_bank_program WHERE program_id = ? AND created_by = ?");
-$stmt->bind_param("ii", $program_id, $created_by);
+$stmt = $conn->prepare("SELECT * FROM rw_bank_program WHERE program_id = ?");
+$stmt->bind_param("i", $program_id);
 $stmt->execute();
 if ($stmt->get_result()->num_rows === 0) {
     header('Content-Type: application/json');
