@@ -36,18 +36,25 @@ if ($user_id !== $_SESSION['login_id']) {
 
 // Build query for programs
 $where = '';
-$types = 'i';
-$params = [$user_id];
+$types = '';
+$params = [];
+
 if ($search) {
-    $where = ' AND program_name LIKE ?';
+    $where = ' WHERE program_name LIKE ?';
     $search_term = "%$search%";
     $params[] = $search_term;
-    $types .= 's';
+    $types = 's';
 }
 
-$query = "SELECT * FROM rw_bank_program WHERE created_by = ? $where ORDER BY program_id DESC";
+$query = "SELECT * FROM rw_bank_program $where ORDER BY program_id DESC";
+
 $stmt = $conn->prepare($query);
-$stmt->bind_param($types, ...$params);
+
+// Only bind parameters if we have a search term
+if ($search) {
+    $stmt->bind_param($types, ...$params);
+}
+
 $stmt->execute();
 $programs = $stmt->get_result();
 
@@ -63,12 +70,18 @@ if ($programs->num_rows > 0) {
             <i class="fas fa-ellipsis-v"></i>
         </button>
         <div class="meatball-menu">
-            <a href="#" class="edit" data-program-id="<?php echo $row['program_id']; ?>" data-program-name="<?php echo htmlspecialchars($row['program_name']); ?>">
-                <i class="fas fa-pen"></i> Edit
-            </a>
-            <a href="#" class="delete" data-program-id="<?php echo $row['program_id']; ?>">
-                <i class="fas fa-trash"></i> Delete
-            </a>
+            <?php if ($is_owner): ?>
+                <a href="#" class="edit" data-program-id="<?php echo $row['program_id']; ?>" data-program-name="<?php echo htmlspecialchars($row['program_name']); ?>">
+                    <i class="fas fa-pen"></i> Edit
+                </a>
+                <a href="#" class="delete" data-program-id="<?php echo $row['program_id']; ?>">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
+            <?php else: ?>
+                <a href="#" class="view-only" data-program-id="<?php echo $row['program_id']; ?>">
+                    <i class="fas fa-eye"></i> View Only
+                </a>
+            <?php endif; ?>
         </div>
     </div>
     <a href="databank_course.php?id=<?php echo $row['program_id']; ?>" class="view-details-btn">View Details</a>

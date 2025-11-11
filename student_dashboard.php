@@ -48,40 +48,6 @@ while ($row = $todo_query->fetch_assoc()) {
                 <h1> Welcome, <?php echo $firstname ?> </h1>
                 <h2> Summary </h2>
                 <div class="cards">
-                    <!-- Total Number of Classes -->
-                    <div class="card" style="background-color: #FFE2E5;">
-                        <img class="icons" src="image/DashboardCoursesIcon.png" alt="Classes Icon">
-                        <?php
-                        $result = $conn->query("SELECT COUNT(*) as totalClasses 
-                                                FROM class c
-                                                JOIN student_enrollment s ON c.class_id = s.class_id
-                                                WHERE s.student_id = '".$_SESSION['login_id']."'
-                                                AND s.status = '1'");
-                        $resTotalClasses = $result->fetch_assoc();
-                        $totalClasses = $resTotalClasses['totalClasses'];
-                        ?>
-                        <div class="card-data">
-                            <h3> <?php echo $totalClasses ?> </h3>
-                            <label>Total Classes</label> 
-                        </div>
-                    </div>
-                    <!-- Total Number of Quizzes -->
-                    <div class="card" style="background-color: #FADEFF"> 
-                        <img class="icons" src="image/DashboardClassesIcon.png" alt="Quizzes Icon">
-                        <?php
-                        $result = $conn->query("SELECT COUNT(*) as totalQuizzes 
-                                                FROM rw_reviewer rw
-                                                WHERE rw.student_id = '".$_SESSION['login_id']."'
-                                                AND reviewer_type = 1
-                        ");
-                        $resTotalQuizzes = $result->fetch_assoc();
-                        $totalQuizzes = $resTotalQuizzes['totalQuizzes'];
-                        ?>
-                        <div class="card-data">
-                            <h3> <?php echo $totalQuizzes ?> </h3>
-                            <label>Total Quizzes</label> 
-                        </div>
-                    </div>
                     <!-- Total Number of Flashcards -->
                     <div class="card" style="background-color: #DCE1FC;"> 
                         <img class="icons" src="image/DashboardExamsIcon.png" alt="Exams Icon">

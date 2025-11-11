@@ -21,7 +21,6 @@ if (!isset($_GET['assessment_id'])) {
 $assessment_id = intval($_GET['assessment_id']);
 $user_id = $_SESSION['login_id'];
 
-// Verify the assessment belongs to the current user
 $assessment_query = "SELECT assessment_title FROM rw_bank_assessment WHERE assessment_id = ? AND created_by = ?";
 $assessment_stmt = $conn->prepare($assessment_query);
 $assessment_stmt->bind_param("ii", $assessment_id, $user_id);
@@ -38,19 +37,6 @@ $assessment = $assessment_result->fetch_assoc();
 $exam_title = $assessment['assessment_title'];
 $assessment_stmt->close();
 
-// Fetch questions linked to this assessment
-$query = "
-    SELECT q.question_id, q.question_text, q.question_type, q.difficulty, q.total_points 
-    FROM rw_bank_question q 
-    INNER JOIN rw_bank_assessment_question aq ON q.question_id = aq.question_id 
-    WHERE aq.assessment_id = ? 
-    ORDER BY aq.date_added DESC
-";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $assessment_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
 $type_map = [
     '1' => 'Multiple Choice',
     '2' => 'Checkbox',
@@ -65,8 +51,29 @@ $difficulty_map = [
     '3' => 'Hard'
 ];
 
+$optimized_query = "
+    SELECT q.question_id, q.question_text, q.question_type, q.difficulty, q.total_points,
+           GROUP_CONCAT(
+               DISTINCT CONCAT(qo.option_id, ':::', qo.option_text, ':::', qo.is_correct)
+               ORDER BY qo.option_id SEPARATOR '|||'
+           ) as options_data,
+           GROUP_CONCAT(DISTINCT qa.correct_answer SEPARATOR '|||') as answers_data
+    FROM rw_bank_question q 
+    INNER JOIN rw_bank_assessment_question aq ON q.question_id = aq.question_id
+    LEFT JOIN rw_bank_question_option qo ON q.question_id = qo.question_id
+    LEFT JOIN rw_bank_question_answer qa ON q.question_id = qa.question_id
+    WHERE aq.assessment_id = ?
+    GROUP BY q.question_id
+    ORDER BY aq.date_added DESC
+";
+
+$optimized_stmt = $conn->prepare($optimized_query);
+$optimized_stmt->bind_param("i", $assessment_id);
+$optimized_stmt->execute();
+$optimized_result = $optimized_stmt->get_result();
+
 $questions = [];
-while ($row = $result->fetch_assoc()) {
+while ($row = $optimized_result->fetch_assoc()) {
     $question = [
         'question' => $row['question_text'],
         'type' => $type_map[$row['question_type']] ?? 'Unknown',
@@ -75,69 +82,63 @@ while ($row = $result->fetch_assoc()) {
     ];
 
     switch ($row['question_type']) {
-        case '1': // Multiple Choice
-        case '2': // Checkbox
+        case '1':
+        case '2':
             $options = [];
             $correct_answers = [];
-            $opt_query = "SELECT option_text, is_correct FROM rw_bank_question_option WHERE question_id = ?";
-            $opt_stmt = $conn->prepare($opt_query);
-            $opt_stmt->bind_param("i", $row['question_id']);
-            $opt_stmt->execute();
-            $opt_result = $opt_stmt->get_result();
-            while ($opt_row = $opt_result->fetch_assoc()) {
-                $options[] = $opt_row['option_text'];
-                if ($opt_row['is_correct']) {
-                    $correct_answers[] = $opt_row['option_text'];
+            if (!empty($row['options_data'])) {
+                $options_array = explode('|||', $row['options_data']);
+                foreach ($options_array as $option_str) {
+                    $option_parts = explode(':::', $option_str);
+                    if (count($option_parts) >= 3) {
+                        $option_text = $option_parts[1];
+                        $is_correct = (int)$option_parts[2];
+                        $options[] = $option_text;
+                        if ($is_correct) {
+                            $correct_answers[] = $option_text;
+                        }
+                    }
                 }
             }
-            $opt_stmt->close();
-
             $question['options'] = $options;
             $question['correct_answer'] = ($row['question_type'] == '2') ? $correct_answers : ($correct_answers[0] ?? null);
             break;
 
-        case '3': // True or False
-            $opt_query = "SELECT option_text, is_correct FROM rw_bank_question_option WHERE question_id = ?";
-            $opt_stmt = $conn->prepare($opt_query);
-            $opt_stmt->bind_param("i", $row['question_id']);
-            $opt_stmt->execute();
-            $opt_result = $opt_stmt->get_result();
+        case '3':
             $correct_answer = null;
-            while ($opt_row = $opt_result->fetch_assoc()) {
-                if ($opt_row['is_correct']) {
-                    // Convert "1" to "true" and "0" to "false" since option_text stores 1/0
-                    if ($opt_row['option_text'] == '1') {
-                        $correct_answer = 'true';
-                    } elseif ($opt_row['option_text'] == '0') {
-                        $correct_answer = 'false';
-                    } else {
-                        $correct_answer = strtolower($opt_row['option_text']);
+            if (!empty($row['options_data'])) {
+                $options_array = explode('|||', $row['options_data']);
+                foreach ($options_array as $option_str) {
+                    $option_parts = explode(':::', $option_str);
+                    if (count($option_parts) >= 3 && (int)$option_parts[2] == 1) {
+                        $option_text = $option_parts[1];
+                        if ($option_text == '1') {
+                            $correct_answer = 'true';
+                        } elseif ($option_text == '0') {
+                            $correct_answer = 'false';
+                        } else {
+                            $correct_answer = strtolower($option_text);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
-            $opt_stmt->close();
             $question['correct_answer'] = $correct_answer;
             break;
 
-        case '4': // Identification
-        case '5': // Fill in the Blank
-            $ans_query = "SELECT correct_answer FROM rw_bank_question_answer WHERE question_id = ?";
-            $ans_stmt = $conn->prepare($ans_query);
-            $ans_stmt->bind_param("i", $row['question_id']);
-            $ans_stmt->execute();
-            $ans_result = $ans_stmt->get_result();
+        case '4':
+        case '5':
             $answers = [];
-            while ($ans_row = $ans_result->fetch_assoc()) {
-                $answers[] = $ans_row['correct_answer'];
+            if (!empty($row['answers_data'])) {
+                $answers = explode('|||', $row['answers_data']);
             }
-            $ans_stmt->close();
             $question['correct_answer'] = (count($answers) > 1) ? $answers : ($answers[0] ?? null);
             break;
     }
 
     $questions[] = $question;
 }
+$optimized_stmt->close();
 
 $output = [
     'exam_title' => $exam_title,
@@ -147,7 +148,6 @@ $output = [
     'questions' => $questions
 ];
 
-// Sanitize exam title for filename
 $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', $exam_title);
 $filename = strtolower($filename);
 

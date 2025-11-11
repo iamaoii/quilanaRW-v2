@@ -25,9 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'Program name is required';
         } else {
             try {
-                // Check if program name already exists for this user
-                $check_query = $conn->prepare("SELECT COUNT(*) as count FROM rw_bank_program WHERE program_name = ? AND created_by = ?");
-                $check_query->bind_param("si", $program_name, $created_by);
+                // Check if program name already exists
+                $check_query = $conn->prepare("SELECT COUNT(*) as count FROM rw_bank_program WHERE program_name = ?");
+                $check_query->bind_param("s", $program_name);
                 $check_query->execute();
                 $result = $check_query->get_result();
                 $row = $result->fetch_assoc();

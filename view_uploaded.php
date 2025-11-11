@@ -134,7 +134,7 @@ if ($assessment_id > 0) {
 
     <div class="content-wrapper">
         <div class="back-arrow">
-            <a href="class_enrolled.php">
+            <a href="student_dashboard.php">
                 <i class="fa fa-arrow-left"></i>
             </a>
         </div>

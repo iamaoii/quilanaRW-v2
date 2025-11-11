@@ -192,7 +192,7 @@ if ($assessment_mode == 1) { // Normal Mode
     <?php include('nav_bar.php'); ?>
     <div class="content-wrapper">
         <div class="back-arrow">
-            <a href="classes.php?class_id=<?php echo htmlspecialchars($class_id); ?>&show_modal=true">
+            <a href="faculty_dashboard.php">
                 <i class="fa fa-arrow-left"></i>
             </a>
             <button class="secondary-button" id="download" style="display:none;">Download Results</button>

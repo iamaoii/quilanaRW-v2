@@ -44,7 +44,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in and redirect if not
 if (!isset($_SESSION['login_user_type'])) {
     header("Location: login.php");
     exit();
@@ -88,12 +87,10 @@ if ($program_id == 0 || $course_id == 0 || $topic_id == 0) {
     die("Invalid parameters provided.");
 }
 
-// Fetch Program, Course, and Topic details
 $program_name = "";
 $course_name = "";
 $topic_name = "";
 
-// Program
 $program_query = "SELECT program_name FROM rw_bank_program WHERE program_id = ?";
 if ($stmt = $conn->prepare($program_query)) {
     $stmt->bind_param("i", $program_id_int);
@@ -103,7 +100,6 @@ if ($stmt = $conn->prepare($program_query)) {
     $stmt->close();
 }
 
-// Course
 $course_query = "SELECT course_name FROM rw_bank_course WHERE course_id = ?";
 if ($stmt = $conn->prepare($course_query)) {
     $stmt->bind_param("i", $course_id_int);
@@ -113,7 +109,6 @@ if ($stmt = $conn->prepare($course_query)) {
     $stmt->close();
 }
 
-// Topic
 $topic_query = "SELECT topic_name FROM rw_bank_topic WHERE topic_id = ?";
 if ($stmt = $conn->prepare($topic_query)) {
     $stmt->bind_param("i", $topic_id_int);
@@ -163,16 +158,24 @@ if ($stmt = $conn->prepare($topic_query)) {
         </div>
 
         <?php
-        // Get questions under this topic
-        $questions_query = "
-            SELECT q.* 
-            FROM rw_bank_question q 
-            WHERE q.topic_id = ? 
-            ORDER BY q.date_created DESC
-        ";
         $question_number = 1;
 
-        if ($stmt = $conn->prepare($questions_query)) {
+        $optimized_query = "
+            SELECT q.*,
+                   GROUP_CONCAT(
+                       DISTINCT CONCAT(qo.option_id, ':::', qo.option_text, ':::', qo.is_correct)
+                       ORDER BY qo.option_id SEPARATOR '|||'
+                   ) as options_data,
+                   GROUP_CONCAT(DISTINCT qa.correct_answer SEPARATOR '|||') as answers_data
+            FROM rw_bank_question q
+            LEFT JOIN rw_bank_question_option qo ON q.question_id = qo.question_id
+            LEFT JOIN rw_bank_question_answer qa ON q.question_id = qa.question_id
+            WHERE q.topic_id = ?
+            GROUP BY q.question_id
+            ORDER BY q.date_created DESC
+        ";
+        
+        if ($stmt = $conn->prepare($optimized_query)) {
             $stmt->bind_param("i", $topic_id_int);
             $stmt->execute();
             $questions_result = $stmt->get_result();
@@ -192,46 +195,29 @@ if ($stmt = $conn->prepare($topic_query)) {
                     echo '<p><strong>Points:</strong> ' . htmlspecialchars($row['total_points'] ?? '1') . '</p>';
                     echo '<p><strong>Created:</strong> ' . htmlspecialchars($row['date_created']) . '</p>';
 
-                    // Show options or answers
-                    // Fixed: Use integer values for question_type to match database (char '1', '2', '3')
                     if (in_array($row['question_type'], ['1', '2', '3'])) {
-                        $options_query = "
-                            SELECT option_text, is_correct 
-                            FROM rw_bank_question_option 
-                            WHERE question_id = ? 
-                            ORDER BY option_id ASC
-                        ";
-                        if ($opt_stmt = $conn->prepare($options_query)) {
-                            $opt_stmt->bind_param("i", $row['question_id']);
-                            $opt_stmt->execute();
-                            $options_result = $opt_stmt->get_result();
-
+                        if (!empty($row['options_data'])) {
                             echo '<div class="option-list"><strong>Options:</strong><ul>';
-                            while ($option = $options_result->fetch_assoc()) {
-                                $correct_class = $option['is_correct'] ? 'correct-answer' : '';
-                                echo '<li class="option-item ' . $correct_class . '">';
-                                echo htmlspecialchars($option['option_text']);
-                                if ($option['is_correct']) echo ' ✓';
-                                echo '</li>';
+                            $options = explode('|||', $row['options_data']);
+                            foreach ($options as $option_str) {
+                                $option_parts = explode(':::', $option_str);
+                                if (count($option_parts) >= 3) {
+                                    $option_text = htmlspecialchars($option_parts[1]);
+                                    $is_correct = (int)$option_parts[2];
+                                    $correct_class = $is_correct ? 'correct-answer' : '';
+                                    echo '<li class="option-item ' . $correct_class . '">';
+                                    echo $option_text;
+                                    if ($is_correct) echo ' ✓';
+                                    echo '</li>';
+                                }
                             }
                             echo '</ul></div>';
-                            $opt_stmt->close();
                         }
                     } else {
-                        $answer_query = "
-                            SELECT correct_answer 
-                            FROM rw_bank_question_answer 
-                            WHERE question_id = ? 
-                            LIMIT 1
-                        ";
-                        if ($ans_stmt = $conn->prepare($answer_query)) {
-                            $ans_stmt->bind_param("i", $row['question_id']);
-                            $ans_stmt->execute();
-                            $ans_stmt->bind_result($correct_answer);
-                            if ($ans_stmt->fetch()) {
-                                echo '<p><strong>Correct Answer:</strong> <span class="correct-answer">' . htmlspecialchars($correct_answer) . '</span></p>';
-                            }
-                            $ans_stmt->close();
+                        if (!empty($row['answers_data'])) {
+                            $answers = explode('|||', $row['answers_data']);
+                            $correct_answer = htmlspecialchars($answers[0]);
+                            echo '<p><strong>Correct Answer:</strong> <span class="correct-answer">' . $correct_answer . '</span></p>';
                         }
                     }
 

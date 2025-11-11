@@ -35,21 +35,6 @@ if (!isset($_SESSION['login_user_type'])) {
                 <h1> Welcome, <?php echo $firstname ?> </h1>
                 <h2> Summary </h2>
                 <div class="cards">
-                    <!-- Total Number of Classes -->
-                    <div class="card" style="background-color: #FFE2E5;">
-                        <img class="icons" src="image/DashboardCoursesIcon.png" alt="Classes Icon">
-                        <?php
-                        $result = $conn->query("SELECT COUNT(*) as totalClasses 
-                                                FROM class c
-                                                WHERE c.faculty_id = '".$_SESSION['login_id']."'");
-                        $resTotalClasses = $result->fetch_assoc();
-                        $totalClasses = $resTotalClasses['totalClasses'];
-                        ?>
-                        <div class="card-data">
-                            <h3> <?php echo $totalClasses ?> </h3>
-                            <label>Total Classes</label> 
-                        </div>
-                    </div>
                     <!-- Total Number of Uploads -->
                     <div class="card" style="background-color: #C5F1C5"> 
                         <img class="icons" src="image/DashboardSharedIcon.png" alt="Shared Icon">

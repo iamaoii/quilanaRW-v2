@@ -222,7 +222,6 @@
         <?php
         $student_id = $_SESSION['login_id'];
 
-        // Fetch student's enrolled classes
         $classes_query = $conn->query("SELECT c.class_id, c.course_name 
                                         FROM class c 
                                         JOIN student_enrollment s ON c.class_id = s.class_id 
@@ -235,7 +234,6 @@
                 echo '<hr class="separator-line">';
                 echo '</div>';
 
-                // Fetch quizzes for each class
                 $quizzes_query = $conn->query("
                     SELECT a.assessment_id, a.assessment_name, a.topic 
                     FROM assessment a
@@ -245,7 +243,6 @@
 
                 if ($quizzes_query->num_rows > 0) {
                     while ($row = $quizzes_query->fetch_assoc()) {
-                        // Check if the student has taken the assessment
                         $results_query = $conn->query("
                             SELECT 1 
                             FROM student_results 
@@ -275,7 +272,6 @@
 <div id="exams-tab" class="tab-content">
     <div class="assessments-container">
         <?php
-        // Fetch exams separately, ensuring assessment_type is 2
         $classes_query = $conn->query("SELECT c.class_id, c.course_name 
                                         FROM class c 
                                         JOIN student_enrollment s ON c.class_id = s.class_id 
@@ -288,30 +284,25 @@
                 echo '<hr class="separator-line">';
                 echo '</div>';
 
-                // Fetch exams for each class
                 $exams_query = $conn->query("
-                    SELECT a.assessment_id, a.assessment_name, a.topic 
+                    SELECT a.assessment_id, a.assessment_name, a.topic,
+                           CASE WHEN sr.results_id IS NOT NULL THEN 1 ELSE 0 END as has_result
                     FROM assessment a
                     JOIN administer_assessment aa ON a.assessment_id = aa.assessment_id
-                    WHERE aa.class_id = '" . $class['class_id'] . "' AND a.assessment_type = 2
+                    LEFT JOIN student_results sr ON a.assessment_id = sr.assessment_id 
+                        AND sr.student_id = '$student_id'
+                    WHERE aa.class_id = '" . $class['class_id'] . "' 
+                        AND a.assessment_type = 2
+                        AND sr.results_id IS NOT NULL
                 ");
 
                 if ($exams_query->num_rows > 0) {
                     while ($row = $exams_query->fetch_assoc()) {
-                        // Check if the student has taken the exam
-                        $results_query = $conn->query("
-                            SELECT 1 
-                            FROM student_results 
-                            WHERE student_id = '$student_id' AND assessment_id = '" . $row['assessment_id'] . "'
-                        ");
-
-                        if ($results_query->num_rows > 0) {
-                            echo '<div class="assessment-card">';
-                            echo '<div class="assessment-card-title">' . htmlspecialchars($row['assessment_name']) . '</div>';
-                            echo '<div class="assessment-card-text">Topic: ' . htmlspecialchars($row['topic']) . '</div>';
-                            echo '<button class="view_assessment_details" data-id="' . $row['assessment_id'] . '" type="button">View Result</button>';
-                            echo '</div>';
-                        }
+                        echo '<div class="assessment-card">';
+                        echo '<div class="assessment-card-title">' . htmlspecialchars($row['assessment_name']) . '</div>';
+                        echo '<div class="assessment-card-text">Topic: ' . htmlspecialchars($row['topic']) . '</div>';
+                        echo '<button class="view_assessment_details" data-id="' . $row['assessment_id'] . '" type="button">View Result</button>';
+                        echo '</div>';
                     }
                 } else {
                     echo '<div class="no-assessments">No exams yet for ' . htmlspecialchars($class['course_name']) . '</div>';

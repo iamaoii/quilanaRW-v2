@@ -14,7 +14,6 @@ if (!isset($_SESSION['login_id'])) {
 header('Content-Type: application/json');
 
 try {
-    // Get form data (normalized)
     $topic_id = (int)($_POST['topic_id'] ?? 0);
     $question_text = trim((string)($_POST['question_text'] ?? ''));
     $question_type = (string)($_POST['question_type'] ?? '');
@@ -22,12 +21,10 @@ try {
     $total_points = max(1, min(100, (int)($_POST['points'] ?? 1)));
     $created_by = $_SESSION['login_id'];
 
-    // Basic validation
     if (empty($topic_id) || empty($question_text) || empty($question_type)) {
         throw new Exception('Missing required fields');
     }
 
-    // Whitelist validations
     if (!in_array($question_type, ['1','2','3','4','5'], true)) {
         throw new Exception('Invalid question type');
     }
@@ -35,7 +32,6 @@ try {
         throw new Exception('Invalid difficulty value');
     }
 
-    // Validate topic_id exists and belongs to user
     $topic_check = $conn->prepare("SELECT topic_id FROM rw_bank_topic WHERE topic_id = ?");
     $topic_check->bind_param("i", $topic_id);
     $topic_check->execute();
@@ -43,8 +39,6 @@ try {
         throw new Exception('Invalid topic ID');
     }
     $topic_check->close();
-
-    // Prevent duplicate question text within the same topic and same type
     $dup_stmt = $conn->prepare("SELECT question_id FROM rw_bank_question WHERE topic_id = ? AND TRIM(LOWER(question_text)) = TRIM(LOWER(?)) AND question_type = ? LIMIT 1");
     $dup_stmt->bind_param("iss", $topic_id, $question_text, $question_type);
     $dup_stmt->execute();
@@ -54,10 +48,7 @@ try {
     }
     $dup_stmt->close();
 
-    // Start transaction
     $conn->begin_transaction();
-
-    // Insert into rw_bank_question table
     $stmt = $conn->prepare("
         INSERT INTO rw_bank_question (topic_id, question_text, question_type, difficulty, created_by, total_points, date_created, date_updated) 
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
@@ -71,15 +62,13 @@ try {
     $question_id = $conn->insert_id;
     $stmt->close();
 
-    // Handle different question types
     switch ($question_type) {
-        case '1': // Multiple Choice
-        case '2': // Checkbox
+        case '1':
+        case '2':
             if (!isset($_POST['question_opt']) || !is_array($_POST['question_opt'])) {
                 throw new Exception('No options provided');
             }
 
-            // Normalize, collapse whitespace, de-duplicate while preserving order
             $rawOptions = $_POST['question_opt'];
             $options = [];
             $seen = [];
@@ -95,17 +84,14 @@ try {
                 throw new Exception('Please provide at least two unique options');
             }
             
-            // Prepare statement
             $option_stmt = $conn->prepare("
                 INSERT INTO rw_bank_question_option (question_id, option_text, is_correct) 
                 VALUES (?, ?, ?)
             ");
 
             if ($question_type === '1') {
-                // MULTIPLE CHOICE - single correct answer
                 $correct_value = isset($_POST['is_right']) ? intval($_POST['is_right']) : -1;
-                
-                $position = 1; // Start counting from 1
+                $position = 1;
                 foreach ($options as $option_text) {
                     $option_text = trim($option_text);
                     if (empty($option_text)) continue;
@@ -117,7 +103,6 @@ try {
                 }
                 
             } else {
-                // CHECKBOX - multiple correct answers (values start from 1)
                 $correct_values = isset($_POST['is_right']) && is_array($_POST['is_right']) 
                     ? array_map('intval', $_POST['is_right']) 
                     : [];
@@ -126,7 +111,7 @@ try {
                     throw new Exception('Please select at least one correct answer');
                 }
                 
-                $position = 1; // Start counting from 1
+                $position = 1;
                 foreach ($options as $option_text) {
                     $option_text = trim($option_text);
                     if (empty($option_text)) continue;
@@ -141,14 +126,12 @@ try {
             $option_stmt->close();
             break;
 
-        case '3': // True or False
-            // Handle true/false options
+        case '3':
             $tf_answer = $_POST['tf_answer'] ?? '';
             if (!in_array($tf_answer, ['true', 'false'])) {
                 throw new Exception('Please select true or false answer');
             }
 
-            // Insert true option
             $true_stmt = $conn->prepare("
                 INSERT INTO rw_bank_question_option (question_id, option_text, is_correct) 
                 VALUES (?, 'True', ?)
@@ -158,7 +141,6 @@ try {
             $true_stmt->execute();
             $true_stmt->close();
 
-            // Insert false option
             $false_stmt = $conn->prepare("
                 INSERT INTO rw_bank_question_option (question_id, option_text, is_correct) 
                 VALUES (?, 'False', ?)
@@ -169,9 +151,8 @@ try {
             $false_stmt->close();
             break;
 
-        case '4': // Identification
-        case '5': // Fill in the Blank
-            // Handle identification and fill in the blank
+        case '4':
+        case '5':
             $answer_field = ($question_type === '4') ? 'identification_answer' : 'fill_blank_answer';
             $correct_answer = trim($_POST[$answer_field] ?? '');
             
@@ -179,7 +160,6 @@ try {
                 throw new Exception('Please provide a correct answer');
             }
 
-            // Insert answer
             $answer_stmt = $conn->prepare("
                 INSERT INTO rw_bank_question_answer (question_id, correct_answer) 
                 VALUES (?, ?)
@@ -196,7 +176,6 @@ try {
             throw new Exception('Invalid question type');
     }
 
-    // Update no_of_questions in rw_bank_topic
     $update_stmt = $conn->prepare("
         UPDATE rw_bank_topic 
         SET no_of_questions = (SELECT COUNT(*) FROM rw_bank_question WHERE topic_id = ?) 
@@ -208,7 +187,6 @@ try {
     }
     $update_stmt->close();
 
-    // Commit transaction
     $conn->commit();
 
     echo json_encode([
@@ -218,7 +196,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    // Rollback transaction on error
     $conn->rollback();
     
     echo json_encode([

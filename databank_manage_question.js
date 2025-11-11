@@ -1,6 +1,11 @@
 $(document).ready(function () {
-  // Show/hide question type options
-  $("#question_type").change(function () {
+  const $questionType = $("#question_type");
+  const $questionText = $("#question_text");
+  const $questionSearchInput = $("#question_search_input, #search_questions");
+  const $listGroupItems = $(".list-group-item");
+  const $cardBody = $(".card-body");
+  
+  $questionType.change(function () {
     $(".question-type-options").hide();
     const selectedType = $(this).val();
 
@@ -17,7 +22,6 @@ $(document).ready(function () {
     }
   });
 
-  // Add multiple choice option
   $("#add_mc_option").click(function () {
     const optionCount = $("#mc_options .option-group").length + 1;
     const newOption = `
@@ -30,7 +34,6 @@ $(document).ready(function () {
     $("#mc_options").append(newOption);
   });
 
-  // Add checkbox option
   $("#add_cb_option").click(function () {
     const optionCount = $("#cb_options .option-group").length + 1;
     const newOption = `
@@ -43,26 +46,25 @@ $(document).ready(function () {
     $("#cb_options").append(newOption);
   });
 
-  // Remove option
   $(document).on("click", ".remove-option", function () {
     if ($(".option-group").length > 1) {
       $(this).closest(".option-group").remove();
-      // Reindex checkbox values after removal
       reindexCheckboxValues();
     } else {
       alert("At least one option is required.");
     }
   });
 
-  // Function to reindex checkbox/radio values
   function reindexCheckboxValues() {
-    // Reindex multiple choice radio buttons (start from 1)
     $("#mc_options .option-group").each(function (index) {
-      $(this).find('input[type="radio"][name="is_right"]').val(index + 1);
+      $(this)
+        .find('input[type="radio"][name="is_right"]')
+        .val(index + 1);
     });
-    // Reindex checkbox options (start from 1)
     $("#cb_options .option-group").each(function (index) {
-      $(this).find('input[type="checkbox"][name="is_right[]"]').val(index + 1);
+      $(this)
+        .find('input[type="checkbox"][name="is_right[]"]')
+        .val(index + 1);
     });
   }
 
@@ -74,17 +76,14 @@ $(document).ready(function () {
     $("#manageQuestionLabel").text("Add New Question");
   });
 
-  // Selection mode state
   let selectionMode = false;
   let selectedQuestions = new Set();
 
-  // Select Question Button
   $("#select_question_btn").click(function () {
     selectionMode = !selectionMode;
     toggleSelectionMode();
   });
 
-  // Add To Button
   $("#add_to_btn").click(function () {
     if (selectedQuestions.size > 0) {
       $("#selected_questions_count").text(selectedQuestions.size);
@@ -92,25 +91,24 @@ $(document).ready(function () {
     }
   });
 
-  // Toggle selection mode
   function toggleSelectionMode() {
+    const $selectBtn = $("#select_question_btn");
+    const $listItems = $listGroupItems;
+    
     if (selectionMode) {
-      $("#select_question_btn").html(
-        '<i class="fa fa-times"></i> Cancel Selection'
-      );
-      $("#select_question_btn")
+      $selectBtn.html('<i class="fa fa-times"></i> Cancel Selection')
         .removeClass("btn-primary")
         .addClass("btn-warning");
-      $(".list-group-item").addClass("selectable").css("cursor", "pointer");
+      $listItems.addClass("selectable").css("cursor", "pointer");
 
-      // Show Select All checkbox
       $("#select_all_container").show();
-      $("#select_all_checkbox").prop("checked", false).prop("indeterminate", false);
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", false);
 
-      // Add checkboxes to each question
-      $(".list-group-item").each(function () {
+      $listItems.each(function () {
         const questionId = $(this).find(".edit_question").data("id");
-        if (!$(this).find(".question-checkbox").length) {
+        if (!$(this).find(".question-checkbox").length && questionId) {
           $(this).prepend(`
                         <div class="form-check question-checkbox">
                             <input class="form-check-input" type="checkbox" value="${questionId}" id="question_${questionId}">
@@ -119,35 +117,33 @@ $(document).ready(function () {
         }
       });
     } else {
-      $("#select_question_btn").html(
-        '<i class="fa fa-list-check"></i> Select Question'
-      );
-      $("#select_question_btn")
+      $selectBtn.html('<i class="fa fa-list-check"></i> Select Question')
         .removeClass("btn-warning")
         .addClass("btn-primary");
-      $(".list-group-item")
+      $listItems
         .removeClass("selectable selected")
         .css("cursor", "default");
       $(".question-checkbox").remove();
       selectedQuestions.clear();
       updateAddToButton();
-      
-      // Hide Select All checkbox
+
       $("#select_all_container").hide();
-      $("#select_all_checkbox").prop("checked", false).prop("indeterminate", false);
+      $("#select_all_checkbox")
+        .prop("checked", false)
+        .prop("indeterminate", false);
     }
   }
 
-  // Handle Select All checkbox
   $("#select_all_checkbox").change(function () {
     const isChecked = $(this).is(":checked");
-    
-    $(".question-checkbox input").each(function () {
+    const $checkboxes = $(".question-checkbox input");
+
+    $checkboxes.each(function () {
       const questionId = $(this).val();
       const questionItem = $(this).closest(".list-group-item");
-      
+
       $(this).prop("checked", isChecked);
-      
+
       if (isChecked) {
         selectedQuestions.add(questionId);
         questionItem.addClass("selected");
@@ -156,11 +152,10 @@ $(document).ready(function () {
         questionItem.removeClass("selected");
       }
     });
-    
+
     updateAddToButton();
   });
 
-  // Handle question selection
   $(document).on("change", ".question-checkbox input", function () {
     const questionId = $(this).val();
     const questionItem = $(this).closest(".list-group-item");
@@ -177,34 +172,34 @@ $(document).ready(function () {
     updateSelectAllCheckbox();
   });
 
-  // Update Add To button state
   function updateAddToButton() {
-    if (selectedQuestions.size > 0) {
-      $("#add_to_btn").prop("disabled", false);
-      $("#add_to_btn").html(
-        `<i class="fa fa-folder-plus"></i> Add To... (${selectedQuestions.size})`
-      );
+    const $addToBtn = $("#add_to_btn");
+    const count = selectedQuestions.size;
+    
+    if (count > 0) {
+      $addToBtn.prop("disabled", false)
+        .html(`<i class="fa fa-folder-plus"></i> Add To... (${count})`);
     } else {
-      $("#add_to_btn").prop("disabled", true);
-      $("#add_to_btn").html('<i class="fa fa-folder-plus"></i> Add To...');
+      $addToBtn.prop("disabled", true)
+        .html('<i class="fa fa-folder-plus"></i> Add To...');
     }
   }
 
-  // Update Select All checkbox state
   function updateSelectAllCheckbox() {
-    const totalCheckboxes = $(".question-checkbox input").length;
-    const checkedCheckboxes = $(".question-checkbox input:checked").length;
+    const $selectAll = $("#select_all_checkbox");
+    const $checkboxes = $(".question-checkbox input");
+    const totalCheckboxes = $checkboxes.length;
+    const checkedCheckboxes = $checkboxes.filter(":checked").length;
 
     if (checkedCheckboxes === 0) {
-      $("#select_all_checkbox").prop("checked", false).prop("indeterminate", false);
+      $selectAll.prop("checked", false).prop("indeterminate", false);
     } else if (checkedCheckboxes === totalCheckboxes) {
-      $("#select_all_checkbox").prop("checked", true).prop("indeterminate", false);
+      $selectAll.prop("checked", true).prop("indeterminate", false);
     } else {
-      $("#select_all_checkbox").prop("checked", false).prop("indeterminate", true);
+      $selectAll.prop("checked", false).prop("indeterminate", true);
     }
   }
 
-  // Handle click on question items in selection mode
   $(document).on("click", ".list-group-item.selectable", function (e) {
     if (!$(e.target).is("input, button, a, .btn")) {
       const checkbox = $(this).find(".question-checkbox input");
@@ -213,13 +208,11 @@ $(document).ready(function () {
     }
   });
 
-  // Assessment selection handling
   $("#existing_assessment").change(function () {
     const assessmentSelected = $(this).val() !== "";
     $("#confirm_add_to").prop("disabled", !assessmentSelected);
   });
 
-  // CREATE NEW ASSESSMENT FLOW
   $("#new_assessment_btn").click(function () {
     if (selectedQuestions.size === 0) {
       alert("Please select at least one question to add to an assessment.");
@@ -239,7 +232,8 @@ $(document).ready(function () {
       return;
     }
 
-    $("#new_assessment_submit").prop("disabled", true).text("Creating...");
+    const $submitBtn = $("#new_assessment_submit");
+    $submitBtn.prop("disabled", true).text("Creating...");
 
     const formData = new FormData();
     formData.append("assessment_title", title);
@@ -260,22 +254,18 @@ $(document).ready(function () {
             assessmentId,
             function (successAdd, message) {
               $("#newAssessmentModal").modal("hide");
-              $("#addToModal").modal("hide"); // Close parent modal
+              $("#addToModal").modal("hide");
               if (successAdd) {
                 alert("Assessment created and " + message);
                 location.reload();
               } else {
-                alert(
-                  "Assessment created, but failed to add questions: " + message
-                );
+                alert("Assessment created, but failed to add questions: " + message);
                 location.reload();
               }
             }
           );
         } else {
-          alert(
-            "Error creating assessment: " + (data.message || "Unknown error")
-          );
+          alert("Error creating assessment: " + (data.message || "Unknown error"));
         }
       })
       .catch((err) => {
@@ -283,13 +273,10 @@ $(document).ready(function () {
         alert("Network error occurred: " + err.message);
       })
       .finally(() => {
-        $("#new_assessment_submit")
-          .prop("disabled", false)
-          .text("Create & Add");
+        $submitBtn.prop("disabled", false).text("Create & Add");
       });
   });
 
-  // CONFIRM ADD TO (existing assessment)
   $("#confirm_add_to").click(function () {
     const assessmentId = $("#existing_assessment").val();
     if (!assessmentId) {
@@ -297,27 +284,25 @@ $(document).ready(function () {
       return;
     }
 
-    $("#confirm_add_to")
-      .prop("disabled", true)
+    const $confirmBtn = $(this);
+    $confirmBtn.prop("disabled", true)
       .html('<i class="fa fa-spinner fa-spin"></i> Adding...');
 
     addSelectedQuestionsToAssessment(assessmentId, function (success, message) {
       $("#addToModal").modal("hide");
       if (success) {
-        alert(message); // e.g., "Added 2 new question(s) to the assessment."
+        alert(message);
         selectionMode = false;
         toggleSelectionMode();
         location.reload();
       } else {
         alert("Error: " + message);
       }
-      $("#confirm_add_to")
-        .prop("disabled", false)
+      $confirmBtn.prop("disabled", false)
         .html('<i class="fa fa-save"></i> Add to Assessment');
     });
   });
 
-  // Central function to add questions
   function addSelectedQuestionsToAssessment(assessmentId, cb) {
     const questionIds = Array.from(selectedQuestions);
     if (!assessmentId || questionIds.length === 0) {
@@ -351,18 +336,16 @@ $(document).ready(function () {
       });
   }
 
-  // Reset Add To modal
   $("#addToModal").on("hidden.bs.modal", function () {
     $("#existing_assessment").val("");
     $("#confirm_add_to").prop("disabled", true);
   });
 
-  // FORM SUBMIT (Add/Edit Question)
   $("#question-frm").submit(function (e) {
     e.preventDefault();
 
     const formData = new FormData(this);
-    const questionType = $("#question_type").val();
+    const questionType = $questionType.val();
     const questionId = $('input[name="id"]').val();
     const url = questionId
       ? "databank_ajax_update_question.php"
@@ -373,13 +356,13 @@ $(document).ready(function () {
       return;
     }
 
-    if (!$("#question_text").val().trim()) {
+    if (!$questionText.val().trim()) {
       alert("Please enter question text");
       return;
     }
 
-    $("#save_question_btn")
-      .prop("disabled", true)
+    const $saveBtn = $("#save_question_btn");
+    $saveBtn.prop("disabled", true)
       .html('<i class="fa fa-spinner fa-spin"></i> Saving...');
 
     fetch(url, {
@@ -401,21 +384,21 @@ $(document).ready(function () {
         alert("Network error occurred");
       })
       .finally(() => {
-        $("#save_question_btn").prop("disabled", false).html("Save Question");
+        $saveBtn.prop("disabled", false).html("Save Question");
       });
   });
 
-  // DELETE Question
   $(document).on("click", ".remove_question", function () {
     const questionId = $(this).data("id");
+    const $removeBtn = $(this);
 
     if (
       confirm(
         "Are you sure you want to delete this question? This action cannot be undone."
       )
     ) {
-      $(this).html('<i class="fa fa-spinner fa-spin"></i>');
-      $(this).prop("disabled", true);
+      $removeBtn.html('<i class="fa fa-spinner fa-spin"></i>')
+        .prop("disabled", true);
 
       fetch("databank_ajax_delete_question.php", {
         method: "POST",
@@ -431,20 +414,19 @@ $(document).ready(function () {
             location.reload();
           } else {
             alert("Error: " + (data.message || "Failed to delete question"));
-            $(this).html('<i class="fa fa-trash"></i>');
-            $(this).prop("disabled", false);
+            $removeBtn.html('<i class="fa fa-trash"></i>')
+              .prop("disabled", false);
           }
         })
         .catch((error) => {
           console.error("Error:", error);
           alert("Network error occurred");
-          $(this).html('<i class="fa fa-trash"></i>');
-          $(this).prop("disabled", false);
+          $removeBtn.html('<i class="fa fa-trash"></i>')
+            .prop("disabled", false);
         });
     }
   });
 
-  // EDIT Question
   $(document).on("click", ".edit_question", function () {
     const questionId = $(this).data("id");
 
@@ -454,12 +436,12 @@ $(document).ready(function () {
         if (data.success) {
           $("#manageQuestionLabel").text("Edit Question");
           $('input[name="id"]').val(questionId);
-          $("#question_type").val(data.question.question_type);
-          $("#question_text").val(data.question.question_text);
+          $questionType.val(data.question.question_type);
+          $questionText.val(data.question.question_text);
           $("#difficulty").val(data.question.difficulty);
           $("#points").val(data.question.total_points || 1);
 
-          $("#question_type").trigger("change");
+          $questionType.trigger("change");
 
           if (["1", "2", "3"].includes(data.question.question_type)) {
             populateOptions(data.options, data.question.question_type);
@@ -484,7 +466,6 @@ $(document).ready(function () {
       });
   });
 
-  // Function to populate options (for edit mode)
   function populateOptions(options, questionType) {
     $("#mc_options, #cb_options").empty();
 
@@ -530,7 +511,6 @@ $(document).ready(function () {
     }
   }
 
-  // Reset modal when closed
   $("#manage_question").on("hidden.bs.modal", function () {
     $("#question-frm")[0].reset();
     $(".question-type-options").hide();
@@ -538,71 +518,87 @@ $(document).ready(function () {
     $('input[name="id"]').val("");
   });
 
-  // Search questions functionality (debounced)
   const debounceFn = (fn, delay) => {
-    let t; return function() { const ctx=this, args=arguments; clearTimeout(t); t=setTimeout(()=>fn.apply(ctx,args), delay); };
+    let timeoutId;
+    return function () {
+      const context = this;
+      const args = arguments;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn.apply(context, args), delay);
+    };
   };
 
-  function runQuestionFilter(term) {
-    const inputVal = $("#question_search_input, #search_questions").val();
-    const merged = (term !== undefined && term !== null) ? term : (inputVal || "");
-    const searchTerm = merged.toString().toLowerCase().trim();
-    
-    if (searchTerm === "") {
-      // Show all questions if search is empty
-      $(".list-group-item").show();
-      $("#no_questions_note").remove();
+  let cachedListItems = $listGroupItems;
+  const noteId = "#no_questions_note";
+
+  function runQuestionFilter(searchTerm) {
+    const term = (searchTerm !== undefined && searchTerm !== null) 
+      ? searchTerm 
+      : ($questionSearchInput.val() || "");
+    const searchTermLower = term.toString().toLowerCase().trim();
+
+    if (cachedListItems.length !== $listGroupItems.length) {
+      cachedListItems = $listGroupItems;
+    }
+
+    if (searchTermLower === "") {
+      cachedListItems.show();
+      $(noteId).remove();
       return;
     }
-    
-    // legacy clear btn not used anymore but keep safe
+
     $("#clear_search").show();
-    
-    let visibleCount = 0; // kept local if needed later
-    let totalCount = $(".list-group-item").length;
-    
-    $(".list-group-item").each(function () {
-      const questionText = $(this).find("h6").text().toLowerCase();
-      const questionType = $(this).find("p:contains('Type:')").text().toLowerCase();
-      const difficulty = $(this).find("p:contains('Difficulty:')").text().toLowerCase();
-      const options = $(this).find(".option-item").text().toLowerCase();
-      
+
+    let visibleCount = 0;
+
+    cachedListItems.each(function () {
+      const $item = $(this);
+      const questionText = $item.find("h6").text().toLowerCase();
+      const questionType = $item.find("p:contains('Type:')").text().toLowerCase();
+      const difficulty = $item.find("p:contains('Difficulty:')").text().toLowerCase();
+      const options = $item.find(".option-item").text().toLowerCase();
+
       const searchableContent = questionText + " " + questionType + " " + difficulty + " " + options;
-      
-      if (searchableContent.includes(searchTerm)) {
-        $(this).show();
+
+      if (searchableContent.includes(searchTermLower)) {
+        $item.show();
         visibleCount++;
       } else {
-        $(this).hide();
+        $item.hide();
       }
     });
-    
-    // Show friendly empty-state if nothing matched
-    const noteId = "#no_questions_note";
+
     if (visibleCount === 0) {
       if (!$(noteId).length) {
-        const note = $('<div id="no_questions_note" class="text-muted" style="margin-top:20px; text-align:center; font-style: italic;">No questions found matching your search.</div>');
-        $(".card-body").append(note);
+        const note = $(
+          '<div id="no_questions_note" class="text-muted" style="margin-top:20px; text-align:center; font-style: italic;">No questions found matching your search.</div>'
+        );
+        $cardBody.append(note);
       }
     } else {
       $(noteId).remove();
     }
   }
 
-  $("#question_search_input, #search_questions").on("input", debounceFn(function () { runQuestionFilter($(this).val()); }, 50));
-  $("#question_search_btn").on("click", function(){ runQuestionFilter($("#question_search_input").val()); });
+  const debouncedSearch = debounceFn(function () {
+    runQuestionFilter($(this).val());
+  }, 300);
 
-  // Clear search button
-  $("#clear_search").click(function () {
-    $("#search_questions").val("").trigger("input");
-    $("#search_questions").focus();
+  $questionSearchInput.on("input", debouncedSearch);
+  
+  $("#question_search_btn").on("click", function () {
+    runQuestionFilter($questionSearchInput.val());
   });
 
-  // Press Enter to search (already works with input event, but this allows explicit action)
-  $("#search_questions").keypress(function (e) {
+  $("#clear_search").click(function () {
+    $questionSearchInput.val("").trigger("input");
+    $questionSearchInput.focus();
+  });
+
+  $questionSearchInput.keypress(function (e) {
     if (e.which === 13) {
       e.preventDefault();
-      $(this).blur(); // Remove focus to show results clearly
+      $(this).blur();
     }
   });
 });

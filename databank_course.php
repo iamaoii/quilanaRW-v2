@@ -22,8 +22,8 @@ if (!$program_id) {
 }
 
 // Fetch program details
-$stmt = $conn->prepare("SELECT * FROM rw_bank_program WHERE program_id = ? AND created_by = ?");
-$stmt->bind_param("ii", $program_id, $created_by);
+$stmt = $conn->prepare("SELECT * FROM rw_bank_program WHERE program_id = ?");
+$stmt->bind_param("i", $program_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $program = $result->fetch_assoc();
@@ -424,6 +424,15 @@ $programName = htmlspecialchars($program['program_name']);
         }
         .popup-form .modal-footer button:hover {
             background: #333274;
+        }
+
+        .swal-btn-cancel {
+            background-color: #6c757d !important;
+            color: white !important;
+        }
+
+        .swal-btn-cancel:hover {
+            background-color: #5a6268 !important;
         }
 
         /* RESPONSIVENESS */
@@ -867,8 +876,11 @@ $programName = htmlspecialchars($program['program_name']);
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        performSearch();
+                        window.location.reload();
                     });
+                } else if (data.needs_confirmation) {
+                    // Show confirmation dialog for existing course
+                    showCourseLinkingConfirmation(data);
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -890,6 +902,103 @@ $programName = htmlspecialchars($program['program_name']);
                 });
             });
         });
+
+        // Function to show course linking confirmation
+        function showCourseLinkingConfirmation(data) {
+            const courseName = data.course_name;
+            const existingPrograms = data.existing_programs;
+            
+            let programsList = '';
+            if (existingPrograms && existingPrograms.length > 0) {
+                programsList = '<div style="text-align: left; margin: 15px 0;">';
+                programsList += '<p style="font-weight: bold; margin-bottom: 10px;">This course is already in:</p>';
+                programsList += '<ul style="padding-left: 20px; margin: 0;">';
+                existingPrograms.forEach(program => {
+                    programsList += `<li>${program.program_name}</li>`;
+                });
+                programsList += '</ul>';
+                programsList += '</div>';
+            }
+            
+            Swal.fire({
+                title: 'Course Already Exists',
+                html: `The course "<strong>${courseName}</strong>" already exists in other program(s).${programsList}<br>Do you want to link this course to the current program?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Link Course',
+                cancelButtonText: 'Cancel',
+                customClass: { 
+                    confirmButton: 'swal-btn',
+                    cancelButton: 'swal-btn-cancel'
+                },
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Link the existing course to current program
+                    linkExistingCourse(data.course_id, programId);
+                } else {
+                    // User cancelled, reset the form but keep the overlay open
+                    courseAddForm.querySelector('#add_course_name').value = data.course_name;
+                    courseAddForm.querySelector('#add_course_name').focus();
+                }
+            });
+        }
+
+        // Function to link existing course to current program
+        function linkExistingCourse(courseId, programId) {
+            console.log('Linking course:', { courseId, programId }); // Debug log
+            
+            fetch('databank_add_course.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'link_existing_course',
+                    course_id: courseId,
+                    program_id: programId
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    courseAddOverlay.style.display = 'none';
+                    courseAddForm.reset();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Course linked successfully',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to link course',
+                        confirmButtonText: 'OK',
+                        customClass: { confirmButton: 'swal-btn' }
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error linking course:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unexpected error occurred while linking course',
+                    confirmButtonText: 'OK',
+                    customClass: { confirmButton: 'swal-btn' }
+                });
+            });
+        }
 
         // ======== ADD TOPIC POPUP ========
         const topicAddOverlay = document.getElementById('topic-add-overlay');
@@ -1037,7 +1146,7 @@ $programName = htmlspecialchars($program['program_name']);
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
-                                        performSearch();
+                                        window.location.reload();
                                     });
                                 } else {
                                     Swal.fire({
@@ -1147,7 +1256,7 @@ $programName = htmlspecialchars($program['program_name']);
                                         showConfirmButton: false,
                                         timer: 1500
                                     }).then(() => {
-                                        performSearch();
+                                        window.location.reload();
                                     });
                                 } else {
                                     Swal.fire({
@@ -1229,7 +1338,7 @@ $programName = htmlspecialchars($program['program_name']);
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        performSearch();
+                        window.location.reload();
                     });
                 } else {
                     Swal.fire({
@@ -1305,7 +1414,7 @@ $programName = htmlspecialchars($program['program_name']);
                         showConfirmButton: false,
                         timer: 1500
                     }).then(() => {
-                        performSearch();
+                        window.location.reload();
                     });
                 } else {
                     Swal.fire({

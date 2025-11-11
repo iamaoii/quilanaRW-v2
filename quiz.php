@@ -3,7 +3,6 @@
 include('db_connect.php');
 include('auth.php');
 
-// Check if assessment_id is set in URL
 if (!isset($_GET['assessment_id'])) {
     header('location: quiz.php');
     exit();
@@ -11,14 +10,22 @@ if (!isset($_GET['assessment_id'])) {
 
 $assessment_id = $conn->real_escape_string($_GET['assessment_id']);
 
-// Fetch assessment details
 $assessment_query = $conn->query("SELECT * FROM assessment WHERE assessment_id = '$assessment_id'");
 $assessment = $assessment_query->fetch_assoc();
 
-// Fetch questions related to the assessment
-$questions_query = $conn->query("SELECT * FROM questions WHERE assessment_id = '$assessment_id'");
+$questions_query = $conn->query("
+    SELECT q.*, 
+           GROUP_CONCAT(
+               CONCAT(qo.option_id, ':::', qo.option_txt, ':::', qo.is_right) 
+               ORDER BY qo.option_id SEPARATOR '|||'
+           ) as options_data
+    FROM questions q
+    LEFT JOIN question_options qo ON q.question_id = qo.question_id
+    WHERE q.assessment_id = '$assessment_id'
+    GROUP BY q.question_id
+    ORDER BY q.order_by
+");
 
-// Get the time limit for the assessment
 $time_limit = $assessment['time_limit'];
 ?>
 
@@ -89,37 +96,33 @@ $time_limit = $assessment['time_limit'];
                 </ul>
             </div>
 
-            <!-- Questions Container -->
             <div class="questions-container">
                 <?php
-                // Initialize question counter to 1
                 $question_number = 1;
                 while ($question = $questions_query->fetch_assoc()) {
                     echo "<div class='question'>";
                     echo "<p><strong>$question_number. " . htmlspecialchars($question['question']) . "</strong></p>";
 
-                    // Handle input types based on question type
                     $question_type = $question['ques_type'];
 
-                    // Single choice (radio buttons)
-                    if ($question_type == 1) {
-                        $choices_query = $conn->query("SELECT * FROM question_options WHERE question_id = '" . $question['question_id'] . "'");
-                        while ($choice = $choices_query->fetch_assoc()) {
-                            echo "<div class='form-check'>";
-                            echo "<input class='form-check-input' type='radio' name='answers[" . $question['question_id'] . "]' value='" . htmlspecialchars($choice['option_txt']) . "' required>";
-                            echo "<label class='form-check-label'>" . htmlspecialchars($choice['option_txt']) . "</label>";
-                            echo "</div>";
+                    if ($question_type == 1 || $question_type == 2) {
+                        if (!empty($question['options_data'])) {
+                            $options = explode('|||', $question['options_data']);
+                            foreach ($options as $option_str) {
+                                $option_parts = explode(':::', $option_str);
+                                if (count($option_parts) >= 2) {
+                                    $option_txt = htmlspecialchars($option_parts[1]);
+                                    $input_type = ($question_type == 1) ? 'radio' : 'checkbox';
+                                    $name_attr = ($question_type == 1) ? 'answers[' . $question['question_id'] . ']' : 'answers[' . $question['question_id'] . '][]';
+                                    $required = ($question_type == 1) ? ' required' : '';
+                                    
+                                    echo "<div class='form-check'>";
+                                    echo "<input class='form-check-input' type='$input_type' name='$name_attr' value='$option_txt'$required>";
+                                    echo "<label class='form-check-label'>$option_txt</label>";
+                                    echo "</div>";
+                                }
+                            }
                         }
-                    // Multiple choice (checkboxes)
-                    } elseif ($question_type == 2) {
-                        $choices_query = $conn->query("SELECT * FROM question_options WHERE question_id = '" . $question['question_id'] . "'");
-                        while ($choice = $choices_query->fetch_assoc()) {
-                            echo "<div class='form-check'>";
-                            echo "<input class='form-check-input' type='checkbox' name='answers[" . $question['question_id'] . "][]' value='" . htmlspecialchars($choice['option_txt']) . "'>";
-                            echo "<label class='form-check-label'>" . htmlspecialchars($choice['option_txt']) . "</label>";
-                            echo "</div>";
-                        }
-                    // True/False (radio buttons)
                     } elseif ($question_type == 3) {
                         echo "<div class='form-check'>";
                         echo "<input class='form-check-input' type='radio' name='answers[" . $question['question_id'] . "]' value='true' required>";
@@ -129,7 +132,6 @@ $time_limit = $assessment['time_limit'];
                         echo "<input class='form-check-input' type='radio' name='answers[" . $question['question_id'] . "]' value='false' required>";
                         echo "<label class='form-check-label'>False</label>";
                         echo "</div>";
-                    // Fill in the blank and identification (text input)
                     } elseif ($question_type == 4 || $question_type == 5) {
                         echo "<div class='form-check-group'>";
                         echo "<input type='text' class='form-control' name='answers[" . $question['question_id'] . "]' placeholder='Type your answer here' required>";
@@ -147,13 +149,11 @@ $time_limit = $assessment['time_limit'];
 
     <script>
         var timerInterval;
-        var timerExpired = false; // Flag to track if timer has expired
+        var timerExpired = false;
 
-        // Timer functionality
         function startTimer(duration, display) {
             var timer = duration, minutes, seconds;
 
-            // Get stored end time
             var storedEndTime = localStorage.getItem('endTime');
             if (storedEndTime) {
                 var now = Date.now();
@@ -163,7 +163,7 @@ $time_limit = $assessment['time_limit'];
                 localStorage.setItem('endTime', endTime);
             }
 
-            updateDisplay(timer, display); // Initialize display immediately
+            updateDisplay(timer, display);
 
             timerInterval = setInterval(function () {
                 var now = Date.now();
@@ -171,17 +171,16 @@ $time_limit = $assessment['time_limit'];
 
                 if (remainingTime <= 0) {
                     clearInterval(timerInterval);
-                    timerExpired = true; // Set flag to true when timer runs out
+                    timerExpired = true;
                     showPopup('timer-runout-popup');
                     localStorage.removeItem('endTime');
                 } else {
                     updateDisplay(remainingTime, display);
-                    localStorage.setItem('remainingTime', remainingTime); // Update the stored remaining time
+                    localStorage.setItem('remainingTime', remainingTime);
                 }
             }, 1000);
         }
 
-        // Function to update display
         function updateDisplay(remainingTime, display) {
             var minutes = Math.floor(remainingTime / 60);
             var seconds = remainingTime % 60;
@@ -190,7 +189,6 @@ $time_limit = $assessment['time_limit'];
             display.textContent = minutes + ":" + seconds;
         }
 
-        // When the window loads
         window.onload = function () {
             var timeLimit = parseInt(document.querySelector('input[name="time_limit"]').value, 10) * 60,
                 display = document.querySelector('#timer');
@@ -198,7 +196,6 @@ $time_limit = $assessment['time_limit'];
             startTimer(timeLimit, display);
         };
 
-        // Handles Popups
         function showPopup(popupId) {
             document.getElementById(popupId).style.display = 'flex';
         }
@@ -224,16 +221,11 @@ $time_limit = $assessment['time_limit'];
             }
         }
 
-        /* Handles Form Submission */
         function submitForm() {
-            // Create a new FormData object from the form
             var formData = new FormData(document.getElementById('quiz-form'));
-
-            // Create an XMLHttpRequest object
             var xhr = new XMLHttpRequest();
             xhr.open('POST', 'submit_quiz.php', true);
 
-            // Set up a handler for when the request completes
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     localStorage.removeItem('endTime');
@@ -244,11 +236,11 @@ $time_limit = $assessment['time_limit'];
                     showPopup('error-popup');
                 }
             };
-            xhr.send(formData); // Send the form data
+            xhr.send(formData);
         }
 
         function viewResult() {
-            window.location.href = 'results.php'; // Redirect to results page
+            window.location.href = 'results.php';
         }
     </script>
 </body>

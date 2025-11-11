@@ -73,6 +73,21 @@ bullets.forEach((bullet) => {
 moveSlider(currentIndex);
 
 let userType = '';
+function toggleFormFields() {
+    $('.validation-note').hide();
+    userType = document.getElementById("userType").value;
+    console.log('Selected user type:', userType);
+    
+    if (userType === '2') {
+        $('#student_number_container').hide();
+        $('#faculty_number_container').show();
+    } else if (userType === '3') {
+        $('#faculty_number_container').hide();
+        $('#student_number_container').show();
+    }
+
+    document.getElementById("registrationFields").style.display = "block";
+}
 
 $(document).ready(function(){
     $('#signin-form').submit(function(e){
@@ -103,4 +118,152 @@ $(document).ready(function(){
             }
         });
     });
+
+    $('#signup-form').submit(function(e) {
+        if (!webmailInput.hasClass('valid') || 
+            !studentNumberInput.hasClass('valid') || 
+            !facultyNumberInput.hasClass('valid') || 
+            !passwordInput.hasClass('valid') || 
+            !confirmPasswordInput.hasClass('valid') || 
+            firstnameInput.val().trim() === '' || 
+            lastnameInput.val().trim() === '' || 
+            usernameInput.val().trim() === '') {
+            e.preventDefault(); // Prevent form submission
+        }
+    });
+
+    $('#signup-form').submit(function(e) {
+        e.preventDefault(); // Prevent default form submission
+        $.ajax({
+            type: 'POST',
+            url: 'register.php',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                console.log('Raw response:', response);
+                if (response.status === 'success') {
+                    alert(response.message);
+                    setTimeout(function() {
+                        location.reload();
+                    })                 
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status,error) {
+                console.error("AJAX error: ", error);
+                console.log("Response Text:", xhr.responseText);
+
+            }
+        });
+    });
+
+    const webmailInput = $('#webmail');
+    const studentNumberInput = $('#student_number');
+    const facultyNumberInput = $('#faculty_number');
+    const passwordInput = $('#password');
+    const confirmPasswordInput = $('#confirm_password');
+    const signUpButton = $('#signUpButton');
+    const firstnameInput = $('#firstname');
+    const lastnameInput = $('#lastname');
+    const usernameInput = $('#username');
+
+    const userTypeDropdown = $('#userType');
+
+    function validateEmail(email, userType) {
+        let regex;
+        if (userType == '2') { // Faculty
+            regex = /^[a-zA-Z0-9._%+-]+@pup\.edu\.ph$/;
+        } else if (userType == '3') { // Student
+            regex = /^[a-zA-Z0-9._%+-]+@iskolarngbayan\.pup\.edu\.ph$/;
+        }
+        return regex.test(email);
+    }
+
+    function validateStudentNumber(studentNumber) {
+        const regex = /^\d{4}-\d{5}-MN-0$/;
+        return regex.test(studentNumber);
+    }
+
+    function validateFacultyNumber(facultyNumber) {
+        const regex = /^\d{4}-\d{5}-MN-0$/; // Update with actual faculty number format
+        return regex.test(facultyNumber);
+    }
+
+    function validatePassword(password) {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/;
+        return regex.test(password);
+    }
+
+    function toggleSignUpButton() {
+        const isValid = webmailInput.hasClass('valid') && 
+                        (studentNumberInput.hasClass('valid') ||
+                        facultyNumberInput.hasClass('valid')) &&
+                        passwordInput.hasClass('valid') && 
+                        confirmPasswordInput.hasClass('valid') &&
+                        firstnameInput.val().trim() !== '' &&
+                        lastnameInput.val().trim() !== '' &&
+                        usernameInput.val().trim() !== '';
+
+        signUpButton.prop('disabled', !isValid);
+    }
+
+    webmailInput.on('input', function() {
+        const userType = userTypeDropdown.val(); // Get the current user type
+        const isValid = validateEmail(webmailInput.val(), userType);
+        webmailInput.toggleClass('valid', isValid).toggleClass('invalid', !isValid);
+        $('.webmail-note').hide();
+        if (!isValid) {
+            if (userType == '2') { // Faculty
+                $('#facultywebmail-validation').show();
+            } else if (userType == '3') { // Student
+                $('#studentwebmail-validation').show();
+            }
+        }
+        toggleSignUpButton();
+    });
+
+    studentNumberInput.on('input', function() {
+        const isValid = validateStudentNumber(studentNumberInput.val());
+        studentNumberInput.toggleClass('valid', isValid).toggleClass('invalid', !isValid);
+        $('.student-number-note').hide();
+        if (!isValid) {
+            $('#studentnumber-validation').show();
+        }
+        toggleSignUpButton();
+    });
+
+    facultyNumberInput.on('input', function() {
+        const isValid = validateFacultyNumber(facultyNumberInput.val());
+        facultyNumberInput.toggleClass('valid', isValid).toggleClass('invalid', !isValid);
+        $('.faculty-number-note').hide();
+        if (!isValid) {
+            $('#facultynumber-validation').show();
+        }
+        toggleSignUpButton();
+    });
+
+    passwordInput.on('input', function() {
+        const isValid = validatePassword(passwordInput.val());
+        passwordInput.toggleClass('valid', isValid).toggleClass('invalid', !isValid);
+        $('.password-note').hide();
+        if (!isValid) {
+            $('#password-validation').show();
+        }
+        toggleSignUpButton();
+    });
+
+    confirmPasswordInput.on('input', function() {
+        const isValid = confirmPasswordInput.val() === passwordInput.val();
+        confirmPasswordInput.toggleClass('valid', isValid).toggleClass('invalid', !isValid);
+        $('.confirm-password-note').hide();
+        if (!isValid) {
+            $('#confirmpassword-validation').show();
+        }
+        toggleSignUpButton();
+    });
+
+    firstnameInput.on('input', toggleSignUpButton);
+    lastnameInput.on('input', toggleSignUpButton);
+    usernameInput.on('input', toggleSignUpButton);
 });
