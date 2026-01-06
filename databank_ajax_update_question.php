@@ -21,6 +21,10 @@ try {
     $difficulty = (string)($_POST['difficulty'] ?? '1');
     $total_points = max(1, min(100, (int)($_POST['points'] ?? 1)));
     $created_by = $_SESSION['login_id'];
+<<<<<<< Updated upstream
+=======
+    $is_admin = isset($_SESSION['login_username']) && $_SESSION['login_username'] === 'admin';
+>>>>>>> Stashed changes
 
     if (empty($question_id) || empty($topic_id) || empty($question_text) || empty($question_type)) {
         throw new Exception('Missing required fields');
@@ -33,8 +37,19 @@ try {
         throw new Exception('Invalid difficulty value');
     }
 
+<<<<<<< Updated upstream
     $check_stmt = $conn->prepare("SELECT question_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
     $check_stmt->bind_param("ii", $question_id, $created_by);
+=======
+    // Only allow the creator to update the question (or admin)
+    if ($is_admin) {
+        $check_stmt = $conn->prepare("SELECT question_id FROM rw_bank_question WHERE question_id = ?");
+        $check_stmt->bind_param("i", $question_id);
+    } else {
+        $check_stmt = $conn->prepare("SELECT question_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
+        $check_stmt->bind_param("ii", $question_id, $created_by);
+    }
+>>>>>>> Stashed changes
     $check_stmt->execute();
     
     if ($check_stmt->get_result()->num_rows === 0) {

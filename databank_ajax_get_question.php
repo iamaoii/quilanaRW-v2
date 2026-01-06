@@ -14,9 +14,27 @@ try {
         throw new Exception('Question ID is required');
     }
 
+<<<<<<< Updated upstream
     // Get question details
     $question_stmt = $conn->prepare("SELECT * FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
     $question_stmt->bind_param("ii", $question_id, $_SESSION['login_id']);
+=======
+    if (!isset($_SESSION['login_id'])) {
+        throw new Exception('User not logged in');
+    }
+
+    $created_by = $_SESSION['login_id'];
+    $is_admin = isset($_SESSION['login_username']) && $_SESSION['login_username'] === 'admin';
+
+    // Get question details (only if created by current user, or if user is admin)
+    if ($is_admin) {
+        $question_stmt = $conn->prepare("SELECT * FROM rw_bank_question WHERE question_id = ?");
+        $question_stmt->bind_param("i", $question_id);
+    } else {
+        $question_stmt = $conn->prepare("SELECT * FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
+        $question_stmt->bind_param("ii", $question_id, $created_by);
+    }
+>>>>>>> Stashed changes
     $question_stmt->execute();
     $question_result = $question_stmt->get_result();
     

@@ -14,10 +14,30 @@ try {
         throw new Exception('Question ID is required');
     }
 
+<<<<<<< Updated upstream
     $conn->begin_transaction();
 
     $check_stmt = $conn->prepare("SELECT question_id, topic_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
     $check_stmt->bind_param("ii", $question_id, $_SESSION['login_id']);
+=======
+    if (!isset($_SESSION['login_id'])) {
+        throw new Exception('User not logged in');
+    }
+
+    $created_by = $_SESSION['login_id'];
+    $is_admin = isset($_SESSION['login_username']) && $_SESSION['login_username'] === 'admin';
+
+    $conn->begin_transaction();
+
+    // Only allow the creator to delete the question (or admin)
+    if ($is_admin) {
+        $check_stmt = $conn->prepare("SELECT question_id, topic_id FROM rw_bank_question WHERE question_id = ?");
+        $check_stmt->bind_param("i", $question_id);
+    } else {
+        $check_stmt = $conn->prepare("SELECT question_id, topic_id FROM rw_bank_question WHERE question_id = ? AND created_by = ?");
+        $check_stmt->bind_param("ii", $question_id, $created_by);
+    }
+>>>>>>> Stashed changes
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     

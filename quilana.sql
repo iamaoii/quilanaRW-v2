@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.1deb3
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Sep 16, 2025 at 07:27 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost:3306
+-- Generation Time: Jan 06, 2026 at 11:37 AM
+-- Server version: 10.11.13-MariaDB-0ubuntu0.24.04.1
+-- PHP Version: 8.3.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `updated_quilana`
+-- Database: `quilana`
 --
 
 -- --------------------------------------------------------
@@ -35,7 +35,7 @@ CREATE TABLE `administer_assessment` (
   `start_time` datetime DEFAULT NULL,
   `status` tinyint(1) NOT NULL,
   `ranks_status` tinyint(1) NOT NULL,
-  `date_administered` date NOT NULL DEFAULT curdate()
+  `date_administered` date NOT NULL DEFAULT (CURRENT_DATE)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -63,13 +63,6 @@ CREATE TABLE `assessment` (
   `faculty_id` int(11) NOT NULL,
   `date_updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `assessment`
---
-
-INSERT INTO `assessment` (`assessment_id`, `assessment_type`, `assessment_mode`, `assessment_name`, `program_id`, `course_name`, `topic`, `time_limit`, `passing_rate`, `total_points`, `max_points`, `max_warnings`, `student_count`, `remaining_points`, `randomize_questions`, `faculty_id`, `date_updated`) VALUES
-(1, 1, 1, 'Assessment 1 - DBA', 1, 'Database Administration', 'Intro to DBA', 30, 60, 0, NULL, 5, NULL, NULL, 1, 1, '2025-09-14 16:44:27');
 
 -- --------------------------------------------------------
 
@@ -100,13 +93,6 @@ CREATE TABLE `class` (
   `date_created` datetime NOT NULL DEFAULT current_timestamp(),
   `date_updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `class`
---
-
-INSERT INTO `class` (`class_id`, `code`, `faculty_id`, `program_id`, `course_name`, `class_name`, `date_created`, `date_updated`) VALUES
-(1, 'aedd581c', 1, 1, 'Database Administration', 'BSIT 3-1', '2025-09-14 16:38:32', '2025-09-14 16:38:32');
 
 -- --------------------------------------------------------
 
@@ -149,7 +135,10 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`faculty_id`, `firstname`, `lastname`, `faculty_number`, `webmail`, `username`, `password`, `user_type`, `date_updated`) VALUES
-(1, 'Bobby', 'Marino', '1234-12345-MN-0', 'bobbymarino@pup.edu.ph', 'bobby', '$2y$10$tUvFXnOxfPydppIL2ectxOifUZcfaFhjEDqtWs3r1h29.cOxeNPF.', 2, '2025-09-14 12:57:25');
+(5, 'admin', 'admin', '1234-12345-MN-0', 'admin@pup.edu.ph', 'admin', '$2y$10$W32yy3fUHxPJCTfs8aQmxOLt5qiTis.ROg1Huc21Ln6vbSd152imS', 2, '2025-11-11 13:01:46'),
+(6, 'Monina', 'Barretto', '2013-13175-MN-0', 'mdbarretto@pup.edu.ph', 'nina', '$2y$10$JTCc2DSCB5t9xcHElab.V.dx.nfihZw6iRhdJv6pEovnhmmLsh4PC', 2, '2025-11-11 13:10:49'),
+(7, 'Charles', 'Leclerc', '2025-00016-MN-0', 'cl16@pup.edu.ph', 'cl16', '$2y$10$UsrR.dwq2kbkF5wXwdRD9ebVNohyQ9PenSMn4MVKQu/7x.aB9NOWm', 2, '2025-11-11 15:16:36'),
+(8, 'ninski', 'barretto', '2013-13174-MN-0', 'mdbarrett@pup.edu.ph', 'ninski', '$2y$10$a0z/I43f6qrm/bvpALqgBe8F..UTPihnaSpGe7dLDFdYpdp/s.3qu', 2, '2026-01-02 12:23:29');
 
 -- --------------------------------------------------------
 
@@ -181,14 +170,6 @@ CREATE TABLE `program` (
   `faculty_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `program`
---
-
-INSERT INTO `program` (`program_id`, `program_name`, `faculty_id`) VALUES
-(1, 'BSIT', 1),
-(2, 'BSCS', 1);
-
 -- --------------------------------------------------------
 
 --
@@ -206,17 +187,6 @@ CREATE TABLE `questions` (
   `time_limit` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `questions`
---
-
-INSERT INTO `questions` (`question_id`, `question`, `assessment_id`, `order_by`, `ques_type`, `total_points`, `date_updated`, `time_limit`) VALUES
-(1, 'Multiple question ito', 1, 0, 1, 2, '2025-09-14 16:44:27', NULL),
-(2, 'Checkbox question ito', 1, 0, 2, 3, '2025-09-14 16:44:27', NULL),
-(3, 'True or false na question ito', 1, 0, 3, 1, '2025-09-14 16:44:27', NULL),
-(4, 'Identification question ito', 1, 0, 4, 4, '2025-09-14 16:44:27', NULL),
-(5, 'Fill in the blank na question', 1, 0, 5, 5, '2025-09-14 16:44:27', NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -228,14 +198,6 @@ CREATE TABLE `question_identifications` (
   `identification_answer` text NOT NULL,
   `question_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `question_identifications`
---
-
-INSERT INTO `question_identifications` (`identification_id`, `identification_answer`, `question_id`) VALUES
-(1, 'Identification na sagot', 4),
-(2, 'sagot mo', 5);
 
 -- --------------------------------------------------------
 
@@ -249,18 +211,6 @@ CREATE TABLE `question_options` (
   `is_right` tinyint(1) NOT NULL,
   `question_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `question_options`
---
-
-INSERT INTO `question_options` (`option_id`, `option_txt`, `is_right`, `question_id`) VALUES
-(1, 'Tama', 1, 1),
-(2, 'Mali', 0, 1),
-(3, 'Mali', 0, 1),
-(4, 'Tama', 1, 2),
-(5, 'Correct', 1, 2),
-(6, 'Mali', 0, 2);
 
 -- --------------------------------------------------------
 
@@ -293,6 +243,14 @@ CREATE TABLE `rw_bank_assessment` (
   `no_of_questions` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `rw_bank_assessment`
+--
+
+INSERT INTO `rw_bank_assessment` (`assessment_id`, `assessment_title`, `assessment_type`, `created_by`, `no_of_questions`) VALUES
+(7, 'Assessment 1-DGL', '1', 6, 10),
+(8, 'Assessment 1', '1', 8, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -305,6 +263,22 @@ CREATE TABLE `rw_bank_assessment_question` (
   `question_id` int(11) NOT NULL,
   `date_added` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rw_bank_assessment_question`
+--
+
+INSERT INTO `rw_bank_assessment_question` (`assessment_question_id`, `assessment_id`, `question_id`, `date_added`) VALUES
+(18, 7, 27, '2025-11-11 14:35:24'),
+(19, 7, 26, '2025-11-11 14:35:24'),
+(20, 7, 25, '2025-11-11 14:35:24'),
+(21, 7, 24, '2025-11-11 14:35:24'),
+(22, 7, 23, '2025-11-11 14:35:24'),
+(23, 7, 22, '2025-11-11 14:35:24'),
+(24, 7, 21, '2025-11-11 14:35:24'),
+(25, 7, 20, '2025-11-11 14:35:24'),
+(26, 7, 19, '2025-11-11 14:35:24'),
+(27, 7, 18, '2025-11-11 14:35:24');
 
 -- --------------------------------------------------------
 
@@ -319,6 +293,13 @@ CREATE TABLE `rw_bank_course` (
   `no_of_topics` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `rw_bank_course`
+--
+
+INSERT INTO `rw_bank_course` (`course_id`, `course_name`, `created_by`, `no_of_topics`) VALUES
+(26, 'COMP 001', 6, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -331,6 +312,13 @@ CREATE TABLE `rw_bank_program` (
   `created_by` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `rw_bank_program`
+--
+
+INSERT INTO `rw_bank_program` (`program_id`, `program_name`, `created_by`) VALUES
+(13, 'BSIT', 6);
+
 -- --------------------------------------------------------
 
 --
@@ -342,6 +330,13 @@ CREATE TABLE `rw_bank_program_course` (
   `program_id` int(11) NOT NULL,
   `course_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rw_bank_program_course`
+--
+
+INSERT INTO `rw_bank_program_course` (`program_course_id`, `program_id`, `course_id`) VALUES
+(30, 13, 26);
 
 -- --------------------------------------------------------
 
@@ -357,8 +352,28 @@ CREATE TABLE `rw_bank_question` (
   `difficulty` char(1) NOT NULL,
   `created_by` int(11) NOT NULL,
   `date_created` datetime NOT NULL DEFAULT current_timestamp(),
-  `date_updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `date_updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `total_points` int(3) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rw_bank_question`
+--
+
+INSERT INTO `rw_bank_question` (`question_id`, `topic_id`, `question_text`, `question_type`, `difficulty`, `created_by`, `date_created`, `date_updated`, `total_points`) VALUES
+(18, 25, 'He first implemented the boolean algebra for switching circuts', '1', '1', 6, '2025-11-11 13:56:59', '2025-11-11 13:56:59', 1),
+(19, 25, 'Which are the basic gates', '1', '1', 6, '2025-11-11 13:58:11', '2025-11-11 13:58:11', 1),
+(20, 25, 'What is the equivalent gate of this equation:   X + Y = Z', '1', '1', 6, '2025-11-11 14:00:39', '2025-11-11 14:00:39', 1),
+(21, 25, 'Which are true of boolean algebra', '2', '1', 6, '2025-11-11 14:08:46', '2025-11-11 14:08:46', 1),
+(22, 25, 'An early thinker known to be the Father of Logic.', '4', '1', 6, '2025-11-11 14:10:20', '2025-11-11 14:10:20', 1),
+(23, 25, 'Boolean algebra deals only with 0 and 1 elements', '3', '1', 6, '2025-11-11 14:10:52', '2025-11-11 14:10:52', 1),
+(24, 25, 'This equation:   AB + CD = E   is', '2', '1', 6, '2025-11-11 14:13:14', '2025-11-11 14:13:14', 1),
+(25, 25, 'Given this equation, AB + CD = E\r\nHow many times will the value of E be equal to 1', '1', '1', 6, '2025-11-11 14:26:24', '2025-11-11 14:26:24', 1),
+(26, 25, 'What gate will give a high output if and only if one of its 2 values is 1 or if its 2 inputs have different values?', '4', '1', 6, '2025-11-11 14:31:31', '2025-11-11 14:31:31', 1),
+(27, 25, 'Given the equation AB + CD = E\r\nWhat will be the value of E if its inputs has the following values\r\n1010 for A, B, C, and D respectively.', '3', '1', 6, '2025-11-11 14:33:37', '2025-11-11 14:33:37', 1),
+(29, 26, 'IT professional who code, tests, debug programs', '4', '1', 8, '2026-01-06 02:47:05', '2026-01-06 02:47:05', 1),
+(30, 26, 'MIS manager are involved only in the planning stage', '3', '1', 8, '2026-01-06 02:47:40', '2026-01-06 02:47:40', 1),
+(31, 26, 'IT professionals who develop via the web', '4', '1', 8, '2026-01-06 02:50:59', '2026-01-06 02:50:59', 1);
 
 -- --------------------------------------------------------
 
@@ -371,6 +386,16 @@ CREATE TABLE `rw_bank_question_answer` (
   `question_id` int(11) NOT NULL,
   `correct_answer` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rw_bank_question_answer`
+--
+
+INSERT INTO `rw_bank_question_answer` (`answer_id`, `question_id`, `correct_answer`) VALUES
+(28, 22, 'Aristotle'),
+(29, 26, 'XOR'),
+(30, 29, 'software engineer'),
+(31, 31, 'web developer');
 
 -- --------------------------------------------------------
 
@@ -385,6 +410,40 @@ CREATE TABLE `rw_bank_question_option` (
   `is_correct` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `rw_bank_question_option`
+--
+
+INSERT INTO `rw_bank_question_option` (`option_id`, `question_id`, `option_text`, `is_correct`) VALUES
+(55, 18, 'Aristotle', 0),
+(56, 18, 'Shannon', 1),
+(57, 18, 'Boole', 0),
+(58, 19, 'AND, NOT, OR', 1),
+(59, 19, 'NAND, NOR', 0),
+(60, 19, 'XOR, XNOR', 0),
+(61, 20, 'XOR', 0),
+(62, 20, 'AND', 0),
+(63, 20, 'OR', 1),
+(64, 20, 'XNOR', 0),
+(65, 21, 'It uses a set of real numbers', 0),
+(66, 21, 'It has the concept of complementations', 1),
+(67, 21, 'It has addition and multiplication', 1),
+(68, 21, 'It has the inverser of addition and multiplication', 0),
+(69, 23, 'True', 1),
+(70, 23, 'False', 0),
+(71, 24, 'product of sums', 0),
+(72, 24, 'sum of products', 1),
+(73, 24, 'and-or network', 1),
+(74, 24, 'or-and network', 0),
+(75, 25, '1', 0),
+(76, 25, '2', 0),
+(77, 25, '3', 0),
+(78, 25, '4', 1),
+(79, 27, 'True', 0),
+(80, 27, 'False', 1),
+(81, 30, 'True', 0),
+(82, 30, 'False', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -397,6 +456,14 @@ CREATE TABLE `rw_bank_topic` (
   `topic_name` varchar(200) NOT NULL,
   `no_of_questions` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rw_bank_topic`
+--
+
+INSERT INTO `rw_bank_topic` (`topic_id`, `program_course_id`, `topic_name`, `no_of_questions`) VALUES
+(25, 30, 'Digital Logic System', 10),
+(26, 30, 'Peopleware', 3);
 
 -- --------------------------------------------------------
 
@@ -481,7 +548,7 @@ CREATE TABLE `rw_student_results` (
   `reviewer_id` int(11) NOT NULL,
   `rw_submission_id` int(11) NOT NULL,
   `student_score` int(11) NOT NULL,
-  `date_taken` date NOT NULL DEFAULT curdate()
+  `date_taken` date NOT NULL DEFAULT (CURRENT_DATE)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -543,12 +610,23 @@ CREATE TABLE `student` (
   `date_updated` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `student`
+-- Table structure for table `password_reset_requests`
 --
 
-INSERT INTO `student` (`student_id`, `firstname`, `lastname`, `webmail`, `student_number`, `username`, `password`, `user_type`, `date_updated`) VALUES
-(1, 'Nate', 'Libao', 'natelibao@iskolarngbayan.pup.edu.ph', '1234-12345-MN-0', 'nate', '$2y$10$g.GPMiR25ndxgJC/bBBnluG2vyISV7UWj6Y.IyQUKMOMlmmysNiNq', 3, '2025-09-14 20:36:25');
+CREATE TABLE `password_reset_requests` (
+  `request_id` int(11) NOT NULL,
+  `user_type` tinyint(1) NOT NULL COMMENT '2 = Faculty, 3 = Student',
+  `user_id` int(11) NOT NULL COMMENT 'faculty_id or student_id',
+  `username` varchar(150) NOT NULL,
+  `webmail` varchar(150) NOT NULL,
+  `status` enum('pending','approved','rejected','completed') DEFAULT 'pending',
+  `date_requested` datetime NOT NULL DEFAULT current_timestamp(),
+  `date_approved` datetime DEFAULT NULL,
+  `date_processed` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -742,13 +820,14 @@ ALTER TABLE `rw_bank_assessment`
 ALTER TABLE `rw_bank_assessment_question`
   ADD PRIMARY KEY (`assessment_question_id`),
   ADD KEY `fk_rw_aq_assessment` (`assessment_id`),
-  ADD KEY `fk_rw_aq_question` (`question_id`);
+  ADD KEY `fk_question_id` (`question_id`);
 
 --
 -- Indexes for table `rw_bank_course`
 --
 ALTER TABLE `rw_bank_course`
   ADD PRIMARY KEY (`course_id`),
+  ADD UNIQUE KEY `uq_course_name` (`course_name`),
   ADD KEY `fk_rw_course_faculty` (`created_by`);
 
 --
@@ -864,6 +943,15 @@ ALTER TABLE `schedule_assessments`
   ADD KEY `faculty_id` (`faculty_id`);
 
 --
+-- Indexes for table `password_reset_requests`
+--
+ALTER TABLE `password_reset_requests`
+  ADD PRIMARY KEY (`request_id`),
+  ADD KEY `idx_user` (`user_type`,`user_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_date_requested` (`date_requested`);
+
+--
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
@@ -921,13 +1009,13 @@ ALTER TABLE `user_reviewers`
 -- AUTO_INCREMENT for table `administer_assessment`
 --
 ALTER TABLE `administer_assessment`
-  MODIFY `administer_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `administer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `assessment`
 --
 ALTER TABLE `assessment`
-  MODIFY `assessment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `assessment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `assessment_uploads`
@@ -939,7 +1027,7 @@ ALTER TABLE `assessment_uploads`
 -- AUTO_INCREMENT for table `class`
 --
 ALTER TABLE `class`
-  MODIFY `class_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `class_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `dashboard_settings`
@@ -951,37 +1039,37 @@ ALTER TABLE `dashboard_settings`
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `join_assessment`
 --
 ALTER TABLE `join_assessment`
-  MODIFY `join_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `join_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `program`
 --
 ALTER TABLE `program`
-  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `question_identifications`
 --
 ALTER TABLE `question_identifications`
-  MODIFY `identification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `identification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `question_options`
 --
 ALTER TABLE `question_options`
-  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `rw_answer`
@@ -993,55 +1081,55 @@ ALTER TABLE `rw_answer`
 -- AUTO_INCREMENT for table `rw_bank_assessment`
 --
 ALTER TABLE `rw_bank_assessment`
-  MODIFY `assessment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `assessment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_assessment_question`
 --
 ALTER TABLE `rw_bank_assessment_question`
-  MODIFY `assessment_question_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `assessment_question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_course`
 --
 ALTER TABLE `rw_bank_course`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_program`
 --
 ALTER TABLE `rw_bank_program`
-  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `program_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_program_course`
 --
 ALTER TABLE `rw_bank_program_course`
-  MODIFY `program_course_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `program_course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_question`
 --
 ALTER TABLE `rw_bank_question`
-  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `question_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_question_answer`
 --
 ALTER TABLE `rw_bank_question_answer`
-  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_question_option`
 --
 ALTER TABLE `rw_bank_question_option`
-  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `option_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT for table `rw_bank_topic`
 --
 ALTER TABLE `rw_bank_topic`
-  MODIFY `topic_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `topic_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `rw_flashcard`
@@ -1098,34 +1186,40 @@ ALTER TABLE `schedule_assessments`
   MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `password_reset_requests`
+--
+ALTER TABLE `password_reset_requests`
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `student_answer`
 --
 ALTER TABLE `student_answer`
-  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `answer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `student_enrollment`
 --
 ALTER TABLE `student_enrollment`
-  MODIFY `studentEnrollment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `studentEnrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `student_results`
 --
 ALTER TABLE `student_results`
-  MODIFY `results_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `results_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `student_submission`
 --
 ALTER TABLE `student_submission`
-  MODIFY `submission_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `submission_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `user_reviewers`
@@ -1207,6 +1301,7 @@ ALTER TABLE `rw_bank_assessment`
 -- Constraints for table `rw_bank_assessment_question`
 --
 ALTER TABLE `rw_bank_assessment_question`
+  ADD CONSTRAINT `fk_question_id` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_rw_aq_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `rw_bank_assessment` (`assessment_id`),
   ADD CONSTRAINT `fk_rw_aq_question` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`);
 
@@ -1226,33 +1321,33 @@ ALTER TABLE `rw_bank_program`
 -- Constraints for table `rw_bank_program_course`
 --
 ALTER TABLE `rw_bank_program_course`
-  ADD CONSTRAINT `fk_rw_pc_course` FOREIGN KEY (`course_id`) REFERENCES `rw_bank_course` (`course_id`),
-  ADD CONSTRAINT `fk_rw_pc_program` FOREIGN KEY (`program_id`) REFERENCES `rw_bank_program` (`program_id`);
+  ADD CONSTRAINT `fk_rw_pc_course_fix` FOREIGN KEY (`course_id`) REFERENCES `rw_bank_course` (`course_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_rw_pc_program_fix` FOREIGN KEY (`program_id`) REFERENCES `rw_bank_program` (`program_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rw_bank_question`
 --
 ALTER TABLE `rw_bank_question`
   ADD CONSTRAINT `fk_rw_q_faculty` FOREIGN KEY (`created_by`) REFERENCES `faculty` (`faculty_id`),
-  ADD CONSTRAINT `fk_rw_q_topic` FOREIGN KEY (`topic_id`) REFERENCES `rw_bank_topic` (`topic_id`);
+  ADD CONSTRAINT `fk_rw_q_topic_fix` FOREIGN KEY (`topic_id`) REFERENCES `rw_bank_topic` (`topic_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rw_bank_question_answer`
 --
 ALTER TABLE `rw_bank_question_answer`
-  ADD CONSTRAINT `fk_rw_qa_question` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`);
+  ADD CONSTRAINT `fk_rw_qa_question` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rw_bank_question_option`
 --
 ALTER TABLE `rw_bank_question_option`
-  ADD CONSTRAINT `fk_rw_qo_question` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`);
+  ADD CONSTRAINT `fk_rw_qo_question` FOREIGN KEY (`question_id`) REFERENCES `rw_bank_question` (`question_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rw_bank_topic`
 --
 ALTER TABLE `rw_bank_topic`
-  ADD CONSTRAINT `fk_rw_topic_pc` FOREIGN KEY (`program_course_id`) REFERENCES `rw_bank_program_course` (`program_course_id`);
+  ADD CONSTRAINT `fk_rw_topic_pc_fix` FOREIGN KEY (`program_course_id`) REFERENCES `rw_bank_program_course` (`program_course_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `rw_flashcard`

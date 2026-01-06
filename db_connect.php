@@ -1,5 +1,5 @@
 <?php
-$conn = new mysqli('localhost', 'root', '', 'quilana');
+$conn = new mysqli('localhost', 'admin', 'Admin12345!', 'quilana');
 
 // Check connection
 if ($conn->connect_error) {
